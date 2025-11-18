@@ -15,6 +15,18 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 ### 3. AI-Friendly 로깅
 - 규칙 위반 시 상세한 에러 메시지 및 로그 파일 생성
 - 커밋 성공 시 자동으로 로그 정리
+- Quick fix 명령어 제안
+
+### 4. CLI 도구
+- `precommit check`: 커밋 전 검증
+- `precommit status`: 현재 상태 확인
+- `precommit config`: 설정 확인
+- `precommit init`: 설정 파일 초기화
+
+### 5. 통계 및 검증
+- 파일 통계 (총 파일, 필터링된 파일, 무시된 파일 등)
+- 설정 검증 (depth, maxFiles 등)
+- 경고 메시지 (파일 수 제한 초과 등)
 
 ## 설치 및 설정
 
@@ -45,10 +57,40 @@ npm run build
 ```
 
 #### 설정 옵션
-- `depth`: 폴더 경로의 깊이 (기본값: 2)
+- `depth`: 폴더 경로의 깊이 (기본값: 2, 범위: 1-10)
 - `logFile`: 위반 로그 파일 경로
 - `enabled`: 훅 활성화 여부
 - `ignorePaths`: 규칙을 적용하지 않을 파일/폴더 목록
+- `maxFiles`: 커밋당 최대 파일 수 (선택, 기본값: 100)
+- `verbose`: 상세 출력 모드 (선택, 기본값: false)
+
+## CLI 사용법
+
+### 커밋 전 검증
+```bash
+# 현재 staged 파일들이 규칙을 통과하는지 확인
+npm run precommit check
+# 또는
+node dist/cli.js check
+```
+
+### 상태 확인
+```bash
+# 현재 설정과 git 상태 확인
+npm run precommit status
+```
+
+### 설정 확인
+```bash
+# 현재 설정 보기
+npm run precommit config
+```
+
+### 설정 초기화
+```bash
+# .precommitrc.json 파일 생성
+npm run precommit init
+```
 
 ## 사용 예시
 
@@ -73,12 +115,18 @@ git commit -m "Update files"
 # 에러 메시지:
 # ❌ COMMIT BLOCKED - Folder Rule Violation
 # Files from multiple folders detected (depth=2):
-#   [src/components]: src/components/Button.tsx
-#   [src/utils]: src/utils/helpers.ts
+#   [src/components] (1 files):
+#     - src/components/Button.tsx
+#   [src/utils] (1 files):
+#     - src/utils/helpers.ts
 #
 # ✖ RULE: All staged files must be in the same folder path
 # ✖ DEPTH: 2 levels
 # ✖ SOLUTION: Unstage files from other folders or commit them separately
+#
+# 💡 Quick fixes:
+#    git reset src/components/Button.tsx  # Unstage [src/components]
+#    git reset src/utils/helpers.ts  # Unstage [src/utils]
 ```
 
 ## Hook 구성
