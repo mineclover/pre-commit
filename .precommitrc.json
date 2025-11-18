@@ -11,8 +11,7 @@
     ".precommitrc.json",
     "CHANGELOG.md",
     "USAGE.md",
-    ".husky",
-    "src"
+    ".husky"
   ],
   "maxFiles": 100,
   "verbose": false,
