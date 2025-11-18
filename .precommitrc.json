@@ -15,5 +15,6 @@
     "src"
   ],
   "maxFiles": 100,
-  "verbose": false
+  "verbose": false,
+  "language": "en"
 }

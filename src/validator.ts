@@ -1,19 +1,27 @@
 import type { Config, ValidationResult } from './types.js';
+import { getMessages, formatMessage, type Language } from './messages.js';
 
 export class CommitValidator {
   private config: Config;
+  private messages;
 
   constructor(config: Config) {
     this.config = config;
+    this.messages = getMessages(config.language as Language);
   }
 
   /**
    * Get path prefix up to configured depth
    * Example: "src/components/Button/index.ts" with depth=2 -> "src/components"
+   * Special cases:
+   *   - "file.ts" with depth=2 -> "" (root, no prefix)
+   *   - "src/file.ts" with depth=2 -> "src"
    */
   private getPathPrefix(filePath: string, depth: number): string {
     const parts = filePath.split('/');
-    return parts.slice(0, depth).join('/');
+    const actualDepth = Math.min(parts.length - 1, depth); // -1 because last is filename
+    if (actualDepth === 0) return ''; // Root file
+    return parts.slice(0, actualDepth).join('/');
   }
 
   /**
@@ -87,7 +95,7 @@ export class CommitValidator {
     if (uniquePrefixes.length > 1) {
       result.valid = false;
       result.errors.push(
-        `Files from multiple folders detected (depth=${this.config.depth}):`
+        formatMessage(this.messages.multipleFolder, { depth: this.config.depth })
       );
 
       // Sort prefixes for consistent output
@@ -95,21 +103,23 @@ export class CommitValidator {
         const filesInPrefix = filteredFiles.filter(f =>
           this.getPathPrefix(f, this.config.depth) === prefix
         );
-        result.errors.push(`  [${prefix}] (${filesInPrefix.length} files):`);
+        const displayPrefix = prefix || '(root)';
+        result.errors.push(`  [${displayPrefix}] (${filesInPrefix.length} files):`);
         filesInPrefix.forEach(f => result.errors.push(`    - ${f}`));
       });
 
       result.errors.push('');
-      result.errors.push('✖ RULE: All staged files must be in the same folder path');
-      result.errors.push(`✖ DEPTH: ${this.config.depth} levels`);
-      result.errors.push('✖ SOLUTION: Unstage files from other folders or commit them separately');
+      result.errors.push(`✖ ${this.messages.rule}`);
+      result.errors.push(`✖ ${formatMessage(this.messages.depth, { depth: this.config.depth })}`);
+      result.errors.push(`✖ ${this.messages.solution}`);
       result.errors.push('');
-      result.errors.push('💡 Quick fixes:');
+      result.errors.push(`💡 ${this.messages.quickFixes}`);
       uniquePrefixes.forEach(prefix => {
         const filesInPrefix = filteredFiles.filter(f =>
           this.getPathPrefix(f, this.config.depth) === prefix
         );
-        result.errors.push(`   git reset ${filesInPrefix.join(' ')}  # Unstage [${prefix}]`);
+        const displayPrefix = prefix || '(root)';
+        result.errors.push(`   git reset ${filesInPrefix.join(' ')}  # ${this.messages.unstage} [${displayPrefix}]`);
       });
 
       return result;
@@ -123,6 +133,7 @@ export class CommitValidator {
    * Generate commit message prefix from common path
    */
   getCommitPrefix(commonPath: string): string {
+    if (!commonPath) return '[root]';
     return `[${commonPath}]`;
   }
 }

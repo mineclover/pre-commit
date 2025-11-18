@@ -1,11 +1,10 @@
 #!/usr/bin/env node
-import { simpleGit } from 'simple-git';
 import { readFileSync, writeFileSync } from 'fs';
 import { loadConfig } from './config.js';
 import { CommitValidator } from './validator.js';
 import { Logger } from './logger.js';
-
-const git = simpleGit();
+import { getStagedFiles } from './git-helper.js';
+import { getMessages, formatMessage, type Language } from './messages.js';
 
 async function main() {
   try {
@@ -15,21 +14,17 @@ async function main() {
       process.exit(0);
     }
 
+    const messages = getMessages(config.language as Language);
     const logger = new Logger(config.logFile, config.logMaxAgeHours);
 
     // Clear any previous log file (from previous failed commits)
     logger.clear();
 
-    // Get staged files (remove duplicates)
-    const status = await git.status();
-    const stagedFiles = Array.from(new Set([
-      ...status.staged,
-      ...status.created,
-      ...status.renamed.map(r => r.to)
-    ]));
+    // Get staged files
+    const stagedFiles = await getStagedFiles();
 
     if (stagedFiles.length === 0) {
-      console.log('⚠️  No files staged for commit');
+      console.log(`⚠️  ${messages.noFilesStaged}`);
       process.exit(1);
     }
 
@@ -38,22 +33,22 @@ async function main() {
     const result = validator.validate(stagedFiles);
 
     if (!result.valid) {
-      console.error('\n❌ COMMIT BLOCKED - Folder Rule Violation\n');
+      console.error(`\n❌ ${messages.commitBlocked}\n`);
       console.error('━'.repeat(60));
       result.errors.forEach(err => console.error(err));
       console.error('━'.repeat(60));
-      console.error('\n💡 AI-Friendly Error Summary:');
-      console.error(`   - Staged files: ${stagedFiles.length}`);
-      console.error(`   - Required depth: ${config.depth}`);
-      console.error(`   - Multiple folders detected: ${result.errors.filter(e => e.startsWith('  [')).length}`);
-      console.error('   - Action required: Unstage conflicting files\n');
+      console.error(`\n💡 ${messages.aiSummary}`);
+      console.error(`   - ${formatMessage(messages.stagedFiles, { count: stagedFiles.length })}`);
+      console.error(`   - ${formatMessage(messages.requiredDepth, { depth: config.depth })}`);
+      console.error(`   - ${formatMessage(messages.multipleFoldersDetected, { count: result.stats?.uniqueFolders || 0 })}`);
+      console.error(`   - ${messages.actionRequired}\n`);
 
       logger.logViolation(stagedFiles, result.errors);
       process.exit(1);
     }
 
     // Add prefix to commit message if common path exists
-    if (result.commonPath) {
+    if (result.commonPath !== null) {
       const prefix = validator.getCommitPrefix(result.commonPath);
       const commitMsgFile = process.argv[2] || '.git/COMMIT_EDITMSG';
 
@@ -72,7 +67,8 @@ async function main() {
       }
     }
 
-    console.log(`✅ Validation passed: ${stagedFiles.length} files in [${result.commonPath || 'root'}]`);
+    const displayPath = result.commonPath || 'root';
+    console.log(`✅ ${messages.validationPassed}: ${stagedFiles.length} files in [${displayPath}]`);
     process.exit(0);
   } catch (error) {
     console.error('❌ Pre-commit hook error:', error);

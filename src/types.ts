@@ -6,6 +6,7 @@ export interface Config {
   maxFiles?: number; // Optional: max files per commit
   verbose?: boolean; // Optional: verbose output
   logMaxAgeHours?: number; // Optional: max age for log files in hours (for manual cleanup)
+  language?: 'en' | 'ko'; // Optional: message language (default: 'en')
 }
 
 export interface ValidationResult {

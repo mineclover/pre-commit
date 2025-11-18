@@ -1,10 +1,8 @@
 #!/usr/bin/env node
-import { simpleGit } from 'simple-git';
 import { readFileSync, writeFileSync } from 'fs';
 import { loadConfig } from './config.js';
 import { CommitValidator } from './validator.js';
-
-const git = simpleGit();
+import { getStagedFiles } from './git-helper.js';
 
 async function main() {
   try {
@@ -20,12 +18,7 @@ async function main() {
     }
 
     // Get staged files
-    const status = await git.status();
-    const stagedFiles = [
-      ...status.staged,
-      ...status.created,
-      ...status.renamed.map(r => r.to)
-    ];
+    const stagedFiles = await getStagedFiles();
 
     if (stagedFiles.length === 0) {
       process.exit(0);
@@ -35,7 +28,7 @@ async function main() {
     const validator = new CommitValidator(config);
     const result = validator.validate(stagedFiles);
 
-    if (result.valid && result.commonPath) {
+    if (result.valid && result.commonPath !== null) {
       const prefix = validator.getCommitPrefix(result.commonPath);
       let commitMsg = readFileSync(commitMsgFile, 'utf-8');
 

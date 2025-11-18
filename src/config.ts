@@ -9,7 +9,8 @@ const DEFAULT_CONFIG: Config = {
   ignorePaths: [],
   maxFiles: 100,
   verbose: false,
-  logMaxAgeHours: 24
+  logMaxAgeHours: 24,
+  language: 'en'
 };
 
 export function loadConfig(): Config {
