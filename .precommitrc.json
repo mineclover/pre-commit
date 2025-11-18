@@ -9,7 +9,13 @@
     ".gitignore",
     "README.md",
     ".precommitrc.json",
+    "CHANGELOG.md",
+    "USAGE.md",
     ".husky",
     "src"
-  ]
+  ],
+  "maxFiles": 100,
+  "verbose": false,
+  "logMaxAgeHours": 24,
+  "autoCleanupLogs": true
 }
