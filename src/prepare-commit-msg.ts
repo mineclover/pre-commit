@@ -29,7 +29,8 @@ async function main() {
     const result = validator.validate(stagedFiles);
 
     if (result.valid && result.commonPath !== null) {
-      const prefix = validator.getCommitPrefix(result.commonPath);
+      const allFilesIgnored = result.stats?.ignoredFiles === stagedFiles.length;
+      const prefix = validator.getCommitPrefix(result.commonPath, allFilesIgnored);
       let commitMsg = readFileSync(commitMsgFile, 'utf-8');
 
       // Check if it's a template or empty commit

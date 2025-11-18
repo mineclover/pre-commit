@@ -49,7 +49,8 @@ async function main() {
 
     // Add prefix to commit message if common path exists
     if (result.commonPath !== null) {
-      const prefix = validator.getCommitPrefix(result.commonPath);
+      const allFilesIgnored = result.stats?.ignoredFiles === stagedFiles.length;
+      const prefix = validator.getCommitPrefix(result.commonPath, allFilesIgnored);
       const commitMsgFile = process.argv[2] || '.git/COMMIT_EDITMSG';
 
       try {

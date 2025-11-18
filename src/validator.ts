@@ -67,6 +67,7 @@ export class CommitValidator {
     if (filteredFiles.length === 0) {
       // All files are ignored, allow commit
       result.warnings!.push('All staged files are in ignore list');
+      result.commonPath = ''; // Will be converted to [config] or [meta]
       return result;
     }
 
@@ -132,7 +133,8 @@ export class CommitValidator {
   /**
    * Generate commit message prefix from common path
    */
-  getCommitPrefix(commonPath: string): string {
+  getCommitPrefix(commonPath: string, allFilesIgnored: boolean = false): string {
+    if (allFilesIgnored) return '[config]';
     if (!commonPath) return '[root]';
     return `[${commonPath}]`;
   }
