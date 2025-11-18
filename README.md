@@ -26,6 +26,9 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 - `precommit status`: 현재 상태 확인
 - `precommit config`: 설정 확인
 - `precommit init`: 설정 파일 초기화
+- `precommit logs`: 로그 파일 통계
+- `precommit cleanup`: 로그 파일 정리
+- `precommit stats`: 커밋 prefix 통계 분석
 
 ### 5. 통계 및 검증
 - 파일 통계 (총 파일, 필터링된 파일, 무시된 파일 등)
@@ -118,6 +121,15 @@ npm run precommit cleanup
 
 # 모든 로그 파일 정리
 npm run precommit cleanup -- --all
+```
+
+### 커밋 통계
+```bash
+# 최근 20개 커밋의 prefix 분포 확인 (기본값)
+npm run precommit stats
+
+# 특정 개수의 커밋 분석
+npm run precommit stats -- --last 50
 ```
 
 ## 사용 예시
