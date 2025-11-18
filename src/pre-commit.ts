@@ -17,13 +17,8 @@ async function main() {
 
     const logger = new Logger(config.logFile, config.logMaxAgeHours);
 
-    // Cleanup old logs if enabled
-    if (config.autoCleanupLogs) {
-      const deletedCount = logger.cleanupOldLogs();
-      if (config.verbose && deletedCount > 0) {
-        console.log(`🗑️  Cleaned up ${deletedCount} old log file(s)`);
-      }
-    }
+    // Clear any previous log file (from previous failed commits)
+    logger.clear();
 
     // Get staged files (remove duplicates)
     const status = await git.status();

@@ -10,21 +10,13 @@ async function main() {
       process.exit(0);
     }
 
-    // Clear log file on successful commit
+    // Clear all log files on successful commit
     const logger = new Logger(config.logFile, config.logMaxAgeHours);
-    logger.clear();
 
-    // Also cleanup old archived logs
-    const deletedCount = logger.cleanupOldLogs();
+    // Clean up all logs (including any archives if they exist)
+    const deletedCount = logger.cleanupAll();
 
-    if (config.verbose) {
-      console.log('✅ Commit successful - logs cleared');
-      if (deletedCount > 0) {
-        console.log(`🗑️  Cleaned up ${deletedCount} old archived log(s)`);
-      }
-    } else {
-      console.log('✅ Commit successful - logs cleared');
-    }
+    console.log('✅ Commit successful - logs cleared');
 
     process.exit(0);
   } catch (error) {

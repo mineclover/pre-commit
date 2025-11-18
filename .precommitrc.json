@@ -15,7 +15,5 @@
     "src"
   ],
   "maxFiles": 100,
-  "verbose": false,
-  "logMaxAgeHours": 24,
-  "autoCleanupLogs": true
+  "verbose": false
 }

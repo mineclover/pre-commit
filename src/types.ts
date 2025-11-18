@@ -5,8 +5,7 @@ export interface Config {
   ignorePaths: string[];
   maxFiles?: number; // Optional: max files per commit
   verbose?: boolean; // Optional: verbose output
-  logMaxAgeHours?: number; // Optional: max age for log files in hours (default: 24)
-  autoCleanupLogs?: boolean; // Optional: auto cleanup old logs on pre-commit (default: true)
+  logMaxAgeHours?: number; // Optional: max age for log files in hours (for manual cleanup)
 }
 
 export interface ValidationResult {
