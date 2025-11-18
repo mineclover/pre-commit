@@ -1,6 +1,6 @@
 {
   "name": "pre-commit-folder-enforcer",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Pre-commit hook enforcing folder-based commit rules with auto-prefix",
   "type": "module",
   "scripts": {
