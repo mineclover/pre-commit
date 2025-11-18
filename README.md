@@ -10,7 +10,11 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 
 ### 2. 자동 Prefix 추가
 - 커밋 메시지에 자동으로 폴더 경로 prefix 추가
-- 예: `[src/components] Add new button component`
+- `git commit -m` 사용 시에도 자동 추가됨
+- Prefix 종류:
+  - `[folder/path]`: 일반 폴더 (예: `[src/components]`)
+  - `[root]`: 루트 레벨 파일
+  - `[config]`: 설정/메타 파일만 커밋 시 (ignorePaths)
 
 ### 3. AI-Friendly 로깅
 - 규칙 위반 시 상세한 에러 메시지 및 로그 파일 생성
@@ -33,6 +37,11 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 - 다음 커밋 시도 시 이전 로그 자동 삭제
 - 커밋 성공 시 모든 로그 삭제
 - 수동 로그 정리 명령어 제공 (`precommit cleanup`)
+
+### 7. 다국어 지원
+- 영어(en) / 한국어(ko) 메시지 지원
+- 설정 파일에서 `language` 옵션으로 변경
+- 템플릿 기반 메시지 시스템
 
 ## 설치 및 설정
 
@@ -69,6 +78,7 @@ npm run build
 - `ignorePaths`: 규칙을 적용하지 않을 파일/폴더 목록
 - `maxFiles`: 커밋당 최대 파일 수 (선택, 기본값: 100)
 - `verbose`: 상세 출력 모드 (선택, 기본값: false)
+- `language`: 메시지 언어 'en' | 'ko' (선택, 기본값: 'en')
 
 ## CLI 사용법
 

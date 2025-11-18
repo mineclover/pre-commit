@@ -1,5 +1,37 @@
 # Changelog
 
+## v1.3.0 - 2025-11-18
+
+### 새로운 기능
+- **[config] Prefix 추가**
+  - ignorePaths 파일만 커밋 시 `[config]` prefix 자동 추가
+  - 설정/메타 파일 커밋 식별 용이
+
+- **공통 유틸리티 함수**
+  - `git-helper.ts`: getStagedFiles(), getPathDepth()
+  - 코드 중복 제거 및 재사용성 향상
+
+- **다국어 메시지 시스템**
+  - `messages.ts`: 템플릿 기반 메시지
+  - 영어/한국어 지원
+  - `language` 설정 옵션 추가
+
+### 개선 사항
+- 루트 파일 prefix 개선: `[filename]` → `[root]`
+- depth보다 얕은 경로 처리 로직 추가
+- 빈 문자열 commonPath 처리 버그 수정
+- prepare-commit-msg에서 중복 제거 로직 통합
+
+### 버그 수정
+- ignorePaths 파일만 커밋 시 prefix 미추가 문제 해결
+- commonPath === '' 일 때 prefix 안 붙는 버그 수정
+
+### 문서
+- `docs/ADVANCED.md`: 고급 사용 가이드 추가
+- `docs/TROUBLESHOOTING.md`: 문제 해결 가이드 추가
+- README.md 업데이트 (새 기능 반영)
+- USAGE.md 개선
+
 ## v1.2.0 - 2025-11-18
 
 ### 새로운 기능

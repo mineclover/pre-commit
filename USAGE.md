@@ -2,15 +2,29 @@
 
 ## 빠른 시작
 
-### 1. 다른 프로젝트에 설치하기
+### 1. 설치
 
+#### 옵션 A: 새 프로젝트
 ```bash
-# 이 저장소를 클론하거나 파일들을 복사
-cp -r /path/to/this/project/{package.json,tsconfig.json,.precommitrc.json,src,.husky} /your/project/
+git clone <this-repo>
+cd pre-commit-folder-enforcer
+npm install
+npm run build
+```
+
+#### 옵션 B: 기존 프로젝트에 통합
+```bash
+# 필요한 파일들 복사
+cp -r /path/to/pre-commit/{package.json,tsconfig.json,.precommitrc.json,src,.husky} /your/project/
 
 cd /your/project
 npm install
 npm run build
+```
+
+#### 옵션 C: npm package (향후 지원 예정)
+```bash
+npm install pre-commit-folder-enforcer --save-dev
 ```
 
 ### 2. 설정 조정
