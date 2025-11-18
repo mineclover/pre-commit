@@ -11,10 +11,21 @@ async function main() {
     }
 
     // Clear log file on successful commit
-    const logger = new Logger(config.logFile);
+    const logger = new Logger(config.logFile, config.logMaxAgeHours);
     logger.clear();
 
-    console.log('✅ Commit successful - logs cleared');
+    // Also cleanup old archived logs
+    const deletedCount = logger.cleanupOldLogs();
+
+    if (config.verbose) {
+      console.log('✅ Commit successful - logs cleared');
+      if (deletedCount > 0) {
+        console.log(`🗑️  Cleaned up ${deletedCount} old archived log(s)`);
+      }
+    } else {
+      console.log('✅ Commit successful - logs cleared');
+    }
+
     process.exit(0);
   } catch (error) {
     // Don't block on error in post-commit

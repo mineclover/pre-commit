@@ -3,6 +3,7 @@ import { simpleGit } from 'simple-git';
 import { writeFileSync } from 'fs';
 import { loadConfig } from './config.js';
 import { CommitValidator } from './validator.js';
+import { Logger } from './logger.js';
 
 const git = simpleGit();
 
@@ -29,6 +30,8 @@ Commands:
   status          Show current configuration and staged files status
   init            Initialize .precommitrc.json with defaults
   config          Show current configuration
+  cleanup         Clean up log files
+  logs            Show log statistics
   help            Show this help message
 
 Examples:
@@ -36,6 +39,9 @@ Examples:
   precommit status                   # Show detailed status
   precommit init                     # Create default config file
   precommit config                   # Display current config
+  precommit cleanup                  # Clean up old log files
+  precommit cleanup --all            # Clean up all log files
+  precommit logs                     # Show log file info
 `);
 }
 
@@ -156,6 +162,64 @@ function initCommand() {
   }
 }
 
+function cleanupCommand() {
+  try {
+    const config = loadConfig();
+    const logger = new Logger(config.logFile, config.logMaxAgeHours);
+    const args = process.argv.slice(2);
+    const cleanAll = args.includes('--all');
+
+    console.log('\n🗑️  Log Cleanup\n');
+    console.log('━'.repeat(60));
+
+    let deletedCount: number;
+    if (cleanAll) {
+      deletedCount = logger.cleanupAll();
+      console.log(`Cleaned up all log files: ${deletedCount} file(s) deleted`);
+    } else {
+      deletedCount = logger.cleanupOldLogs();
+      console.log(`Cleaned up old log files (>${config.logMaxAgeHours}h): ${deletedCount} file(s) deleted`);
+    }
+
+    console.log('━'.repeat(60) + '\n');
+  } catch (error) {
+    console.error('Error during cleanup:', error);
+    process.exit(1);
+  }
+}
+
+function logsCommand() {
+  try {
+    const config = loadConfig();
+    const logger = new Logger(config.logFile, config.logMaxAgeHours);
+    const stats = logger.getStats();
+
+    console.log('\n📊 Log File Statistics\n');
+    console.log('━'.repeat(60));
+
+    if (stats.exists) {
+      console.log(`Status: ✅ Log file exists`);
+      console.log(`Path: ${config.logFile}`);
+      console.log(`Size: ${stats.size} bytes`);
+      console.log(`Age: ${Math.floor(stats.age! / 1000 / 60)} minutes`);
+      console.log(`Modified: ${stats.modified}`);
+      console.log(`Max age setting: ${config.logMaxAgeHours} hours`);
+
+      if (stats.age! > (config.logMaxAgeHours! * 60 * 60 * 1000)) {
+        console.log(`⚠️  Log is older than configured max age`);
+      }
+    } else {
+      console.log(`Status: ✅ No active log file (all clean)`);
+      console.log(`Path: ${config.logFile}`);
+    }
+
+    console.log('━'.repeat(60) + '\n');
+  } catch (error) {
+    console.error('Error getting log stats:', error);
+    process.exit(1);
+  }
+}
+
 async function main() {
   const { command } = parseArgs();
 
@@ -171,6 +235,12 @@ async function main() {
       break;
     case 'init':
       initCommand();
+      break;
+    case 'cleanup':
+      cleanupCommand();
+      break;
+    case 'logs':
+      logsCommand();
       break;
     case 'help':
     default:
