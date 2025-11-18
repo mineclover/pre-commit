@@ -1,5 +1,31 @@
 # Changelog
 
+## v1.2.0 - 2025-11-18
+
+### 새로운 기능
+- **자동 로그 정리**
+  - pre-commit 시작 시 오래된 로그 자동 삭제 (기본 24시간)
+  - post-commit에서도 오래된 아카이브 로그 정리
+  - `autoCleanupLogs` 설정으로 자동 정리 활성화/비활성화
+
+- **로그 관리 CLI 명령어**
+  - `precommit logs`: 로그 파일 통계 및 상태 확인
+  - `precommit cleanup`: 오래된 로그 파일 정리
+  - `precommit cleanup --all`: 모든 로그 파일 정리
+
+- **로그 아카이빙**
+  - 로그 파일을 타임스탬프와 함께 아카이브 가능
+  - 아카이브된 로그도 자동 정리 대상
+
+### 새로운 설정 옵션
+- `logMaxAgeHours`: 로그 최대 보관 시간 (기본값: 24시간)
+- `autoCleanupLogs`: 자동 로그 정리 활성화 (기본값: true)
+
+### 개선 사항
+- Logger 클래스에 통계 및 정리 기능 추가
+- post-commit에서 verbose 모드 지원
+- 에러 로그 포맷 개선
+
 ## v1.1.0 - 2025-11-18
 
 ### 새로운 기능
