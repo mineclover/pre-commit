@@ -17,13 +17,13 @@ async function main() {
 
     const logger = new Logger(config.logFile);
 
-    // Get staged files
+    // Get staged files (remove duplicates)
     const status = await git.status();
-    const stagedFiles = [
+    const stagedFiles = Array.from(new Set([
       ...status.staged,
       ...status.created,
       ...status.renamed.map(r => r.to)
-    ];
+    ]));
 
     if (stagedFiles.length === 0) {
       console.log('⚠️  No files staged for commit');
