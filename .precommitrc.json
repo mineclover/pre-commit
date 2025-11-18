@@ -1,0 +1,15 @@
+{
+  "depth": 2,
+  "logFile": ".commit-logs/violations.log",
+  "enabled": true,
+  "ignorePaths": [
+    "package.json",
+    "package-lock.json",
+    "tsconfig.json",
+    ".gitignore",
+    "README.md",
+    ".precommitrc.json",
+    ".husky",
+    "src"
+  ]
+}
