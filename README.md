@@ -178,6 +178,13 @@ git commit -m "Update files"
 ### Prepare-commit-msg Hook
 - 커밋 메시지에 자동으로 폴더 경로 prefix 추가
 
+### Commit-msg Hook
+- 커밋 메시지 형식 검증
+- `[prefix] description` 형식 강제
+- 유효한 prefix: `[folder/path]`, `[root]`, `[config]`
+- 최소 description 길이 검증
+- 형식 위반 시 커밋 차단
+
 ### Post-commit Hook
 - 커밋 성공 시 로그 파일 자동 정리
 
@@ -191,8 +198,10 @@ git commit -m "Update files"
 │   ├── config.ts             # 설정 로더
 │   ├── logger.ts             # 로깅 시스템
 │   ├── validator.ts          # 커밋 검증 로직
+│   ├── messages.ts           # 다국어 메시지
 │   ├── pre-commit.ts         # Pre-commit hook
 │   ├── prepare-commit-msg.ts # Prepare-commit-msg hook
+│   ├── commit-msg.ts         # Commit-msg hook
 │   └── post-commit.ts        # Post-commit hook
 ├── .husky/                   # Husky hooks
 ├── dist/                     # 컴파일된 JS 파일
