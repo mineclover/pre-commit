@@ -26,6 +26,7 @@ export interface Messages {
   commitMsgRule: string;
   commitMsgExample: string;
   commitMsgValidPrefixes: string;
+  commitMsgDepthInfo: string;
 }
 
 const EN_MESSAGES: Messages = {
@@ -47,13 +48,14 @@ const EN_MESSAGES: Messages = {
   // Commit message validation
   commitMsgBlocked: 'COMMIT BLOCKED - Invalid Commit Message Format',
   commitMsgInvalid: 'Commit message does not follow the required format',
-  commitMsgMissingPrefix: 'Missing required prefix (e.g., [src/components], [root], [config])',
-  commitMsgInvalidPrefix: 'Invalid prefix format - must be [folder/path]',
+  commitMsgMissingPrefix: 'Missing required prefix (e.g., {examplePrefix}, [root], [config])',
+  commitMsgInvalidPrefix: 'Invalid prefix format - must be {depthFormat}',
   commitMsgTooShort: 'Commit message description is too short (minimum {minLength} characters)',
   commitMsgMissingDescription: 'Missing commit message description after prefix',
   commitMsgRule: 'RULE: Commit messages must start with [prefix] followed by a description',
-  commitMsgExample: 'EXAMPLE: [src/components] Add new Button component',
-  commitMsgValidPrefixes: 'VALID PREFIXES: [folder/path], [root], [config]'
+  commitMsgExample: 'EXAMPLE: {examplePrefix} Add new feature',
+  commitMsgValidPrefixes: 'VALID PREFIXES: {depthFormat}, [root], [config]',
+  commitMsgDepthInfo: 'CONFIGURED DEPTH: {depth} levels (e.g., {examplePrefix})'
 };
 
 const KO_MESSAGES: Messages = {
@@ -75,13 +77,14 @@ const KO_MESSAGES: Messages = {
   // Commit message validation
   commitMsgBlocked: '커밋 차단 - 잘못된 커밋 메시지 형식',
   commitMsgInvalid: '커밋 메시지가 필요한 형식을 따르지 않습니다',
-  commitMsgMissingPrefix: '필수 prefix가 없습니다 (예: [src/components], [root], [config])',
-  commitMsgInvalidPrefix: '잘못된 prefix 형식 - [folder/path] 형식이어야 합니다',
+  commitMsgMissingPrefix: '필수 prefix가 없습니다 (예: {examplePrefix}, [root], [config])',
+  commitMsgInvalidPrefix: '잘못된 prefix 형식 - {depthFormat} 형식이어야 합니다',
   commitMsgTooShort: '커밋 메시지 설명이 너무 짧습니다 (최소 {minLength}자)',
   commitMsgMissingDescription: 'Prefix 뒤에 커밋 메시지 설명이 없습니다',
   commitMsgRule: '규칙: 커밋 메시지는 [prefix]로 시작하고 설명이 따라와야 합니다',
-  commitMsgExample: '예시: [src/components] 새로운 Button 컴포넌트 추가',
-  commitMsgValidPrefixes: '유효한 PREFIX: [folder/path], [root], [config]'
+  commitMsgExample: '예시: {examplePrefix} 새로운 기능 추가',
+  commitMsgValidPrefixes: '유효한 PREFIX: {depthFormat}, [root], [config]',
+  commitMsgDepthInfo: '설정된 DEPTH: {depth} 레벨 (예: {examplePrefix})'
 };
 
 const MESSAGES_MAP: Record<Language, Messages> = {

@@ -11,9 +11,37 @@ interface CommitMsgValidationResult {
 class CommitMessageValidator {
   private minDescriptionLength = 3; // Minimum length for commit description
   private messages;
+  private depth: number;
+  private examplePrefix: string;
+  private depthFormat: string;
 
-  constructor(language: Language = 'en') {
+  constructor(depth: number, language: Language = 'en') {
+    this.depth = depth;
     this.messages = getMessages(language);
+    this.examplePrefix = this.generateExamplePrefix(depth);
+    this.depthFormat = this.generateDepthFormat(depth);
+  }
+
+  /**
+   * Generate example prefix based on depth
+   * depth=1: [src]
+   * depth=2: [src/components]
+   * depth=3: [src/components/Button]
+   */
+  private generateExamplePrefix(depth: number): string {
+    const parts = ['src', 'components', 'Button', 'tests', 'hooks'];
+    return `[${parts.slice(0, Math.min(depth, parts.length)).join('/')}]`;
+  }
+
+  /**
+   * Generate depth format description
+   * depth=1: [folder]
+   * depth=2: [folder/path]
+   * depth=3: [folder/path/to]
+   */
+  private generateDepthFormat(depth: number): string {
+    const parts = ['folder', 'path', 'to', 'file'];
+    return `[${parts.slice(0, Math.min(depth, parts.length)).join('/')}]`;
   }
 
   /**
@@ -33,7 +61,9 @@ class CommitMessageValidator {
     if (!trimmedMsg) {
       result.valid = false;
       result.errors.push(this.messages.commitMsgInvalid);
-      result.errors.push(this.messages.commitMsgMissingPrefix);
+      result.errors.push(formatMessage(this.messages.commitMsgMissingPrefix, {
+        examplePrefix: this.examplePrefix
+      }));
       return result;
     }
 
@@ -43,12 +73,22 @@ class CommitMessageValidator {
     if (!prefixMatch) {
       result.valid = false;
       result.errors.push(this.messages.commitMsgInvalid);
-      result.errors.push(this.messages.commitMsgMissingPrefix);
+      result.errors.push(formatMessage(this.messages.commitMsgMissingPrefix, {
+        examplePrefix: this.examplePrefix
+      }));
       result.errors.push('');
       result.errors.push(`✖ ${this.messages.commitMsgRule}`);
-      result.errors.push(`✖ ${this.messages.commitMsgValidPrefixes}`);
+      result.errors.push(`✖ ${formatMessage(this.messages.commitMsgValidPrefixes, {
+        depthFormat: this.depthFormat
+      })}`);
+      result.errors.push(`✖ ${formatMessage(this.messages.commitMsgDepthInfo, {
+        depth: this.depth,
+        examplePrefix: this.examplePrefix
+      })}`);
       result.errors.push('');
-      result.errors.push(`💡 ${this.messages.commitMsgExample}`);
+      result.errors.push(`💡 ${formatMessage(this.messages.commitMsgExample, {
+        examplePrefix: this.examplePrefix
+      })}`);
       return result;
     }
 
@@ -57,7 +97,9 @@ class CommitMessageValidator {
     // Validate prefix format (should not be empty)
     if (!prefix || prefix.trim() === '') {
       result.valid = false;
-      result.errors.push(this.messages.commitMsgInvalidPrefix);
+      result.errors.push(formatMessage(this.messages.commitMsgInvalidPrefix, {
+        depthFormat: this.depthFormat
+      }));
       return result;
     }
 
@@ -67,7 +109,9 @@ class CommitMessageValidator {
       result.valid = false;
       result.errors.push(this.messages.commitMsgMissingDescription);
       result.errors.push('');
-      result.errors.push(`💡 ${this.messages.commitMsgExample}`);
+      result.errors.push(`💡 ${formatMessage(this.messages.commitMsgExample, {
+        examplePrefix: this.examplePrefix
+      })}`);
       return result;
     }
 
@@ -123,7 +167,7 @@ async function main() {
     }
 
     // Validate commit message
-    const validator = new CommitMessageValidator(config.language as Language);
+    const validator = new CommitMessageValidator(config.depth, config.language as Language);
     const result = validator.validate(commitMsg);
 
     if (!result.valid) {
