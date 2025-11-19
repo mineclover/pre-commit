@@ -16,6 +16,16 @@ export interface Messages {
   requiredDepth: string;
   multipleFoldersDetected: string;
   actionRequired: string;
+  // Commit message validation
+  commitMsgBlocked: string;
+  commitMsgInvalid: string;
+  commitMsgMissingPrefix: string;
+  commitMsgInvalidPrefix: string;
+  commitMsgTooShort: string;
+  commitMsgMissingDescription: string;
+  commitMsgRule: string;
+  commitMsgExample: string;
+  commitMsgValidPrefixes: string;
 }
 
 const EN_MESSAGES: Messages = {
@@ -33,7 +43,17 @@ const EN_MESSAGES: Messages = {
   stagedFiles: 'Staged files: {count}',
   requiredDepth: 'Required depth: {depth}',
   multipleFoldersDetected: 'Multiple folders detected: {count}',
-  actionRequired: 'Action required: Unstage conflicting files'
+  actionRequired: 'Action required: Unstage conflicting files',
+  // Commit message validation
+  commitMsgBlocked: 'COMMIT BLOCKED - Invalid Commit Message Format',
+  commitMsgInvalid: 'Commit message does not follow the required format',
+  commitMsgMissingPrefix: 'Missing required prefix (e.g., [src/components], [root], [config])',
+  commitMsgInvalidPrefix: 'Invalid prefix format - must be [folder/path]',
+  commitMsgTooShort: 'Commit message description is too short (minimum {minLength} characters)',
+  commitMsgMissingDescription: 'Missing commit message description after prefix',
+  commitMsgRule: 'RULE: Commit messages must start with [prefix] followed by a description',
+  commitMsgExample: 'EXAMPLE: [src/components] Add new Button component',
+  commitMsgValidPrefixes: 'VALID PREFIXES: [folder/path], [root], [config]'
 };
 
 const KO_MESSAGES: Messages = {
@@ -51,7 +71,17 @@ const KO_MESSAGES: Messages = {
   stagedFiles: 'Staged 파일: {count}개',
   requiredDepth: '필요 depth: {depth}',
   multipleFoldersDetected: '감지된 폴더 수: {count}',
-  actionRequired: '필요한 작업: 충돌하는 파일 unstage'
+  actionRequired: '필요한 작업: 충돌하는 파일 unstage',
+  // Commit message validation
+  commitMsgBlocked: '커밋 차단 - 잘못된 커밋 메시지 형식',
+  commitMsgInvalid: '커밋 메시지가 필요한 형식을 따르지 않습니다',
+  commitMsgMissingPrefix: '필수 prefix가 없습니다 (예: [src/components], [root], [config])',
+  commitMsgInvalidPrefix: '잘못된 prefix 형식 - [folder/path] 형식이어야 합니다',
+  commitMsgTooShort: '커밋 메시지 설명이 너무 짧습니다 (최소 {minLength}자)',
+  commitMsgMissingDescription: 'Prefix 뒤에 커밋 메시지 설명이 없습니다',
+  commitMsgRule: '규칙: 커밋 메시지는 [prefix]로 시작하고 설명이 따라와야 합니다',
+  commitMsgExample: '예시: [src/components] 새로운 Button 컴포넌트 추가',
+  commitMsgValidPrefixes: '유효한 PREFIX: [folder/path], [root], [config]'
 };
 
 const MESSAGES_MAP: Record<Language, Messages> = {
