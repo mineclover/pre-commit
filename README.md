@@ -7,6 +7,11 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 ### 1. 폴더 경로 기반 커밋 제한
 - 설정된 depth까지의 폴더 경로가 동일한 파일만 함께 커밋 가능
 - 예: depth=2 설정 시, `src/components` 폴더 내 파일들만 함께 커밋
+- **가변 depth 지원**:
+  - **고정 depth**: `depth: 3` → `[folder/path/to]` 형식
+  - **경로별 depth**: `depthOverrides`로 특정 경로에 다른 depth 적용
+  - **자동 감지**: `depth: "auto"`로 파일들의 공통 경로 자동 탐지
+  - **스마트 조정**: 실제 폴더 구조가 설정보다 얕으면 자동 조정
 
 ### 2. 자동 Prefix 추가
 - 커밋 메시지에 자동으로 폴더 경로 prefix 추가
@@ -59,8 +64,11 @@ npm run build
 ```
 
 ### 3. 설정 파일 (`.precommitrc.json`)
+
+#### 기본 설정
 ```json
 {
+  "preset": "folder-based",
   "depth": 2,
   "logFile": ".commit-logs/violations.log",
   "enabled": true,
@@ -70,12 +78,47 @@ npm run build
     "tsconfig.json",
     ".gitignore",
     "README.md"
-  ]
+  ],
+  "language": "en"
+}
+```
+
+#### 경로별 depth 설정
+```json
+{
+  "preset": "folder-based",
+  "depth": 3,
+  "depthOverrides": {
+    "src/hooks": 2,
+    "src/core": 2,
+    "src/presets/folder-based": 3,
+    ".husky": 1,
+    "docs": 1
+  },
+  "ignorePaths": ["dist", "node_modules"],
+  "language": "en"
+}
+```
+
+#### 자동 depth 감지
+```json
+{
+  "preset": "folder-based",
+  "depth": "auto",
+  "maxDepth": 5,
+  "ignorePaths": ["dist", "node_modules"],
+  "language": "en"
 }
 ```
 
 #### 설정 옵션
-- `depth`: 폴더 경로의 깊이 (기본값: 2, 범위: 1-10)
+- `depth`: 폴더 경로의 깊이 (기본값: 2, 범위: 1-10 또는 `"auto"`)
+  - 숫자: 고정 depth (예: `2` = `[folder/path]`, `3` = `[folder/path/to]`)
+  - `"auto"`: 파일들의 공통 경로를 자동 감지
+- `depthOverrides`: 경로별 depth 오버라이드 (선택, 객체)
+  - 특정 경로에 다른 depth 적용 (예: `{"src/hooks": 2, "src/presets/folder-based": 3}`)
+  - 가장 긴 매칭 경로가 우선 적용
+- `maxDepth`: auto 모드에서 최대 depth 제한 (선택, 기본값: 5)
 - `logFile`: 위반 로그 파일 경로
 - `enabled`: 훅 활성화 여부
 - `ignorePaths`: 규칙을 적용하지 않을 파일/폴더 목록
