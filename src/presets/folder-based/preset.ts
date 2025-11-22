@@ -23,6 +23,60 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
   description = 'Enforce folder-based commit rules with automatic prefix generation';
 
   /**
+   * Get the appropriate depth for a file based on depthOverrides
+   * Checks for matching path prefixes in depthOverrides
+   */
+  private getDepthForFile(filePath: string, config: FolderBasedConfig): number {
+    const baseDepth = config.depth === 'auto' ? (config.maxDepth || 5) : config.depth;
+
+    if (!config.depthOverrides) {
+      return baseDepth;
+    }
+
+    // Find matching override (longest match wins)
+    let matchedDepth = baseDepth;
+    let longestMatch = '';
+
+    for (const [pathPrefix, depth] of Object.entries(config.depthOverrides)) {
+      if (filePath.startsWith(pathPrefix + '/') || filePath.startsWith(pathPrefix)) {
+        if (pathPrefix.length > longestMatch.length) {
+          longestMatch = pathPrefix;
+          matchedDepth = depth;
+        }
+      }
+    }
+
+    return matchedDepth;
+  }
+
+  /**
+   * Detect optimal depth for a set of files (auto mode)
+   * Finds the shortest common path depth that groups all files meaningfully
+   */
+  private detectOptimalDepth(files: string[], maxDepth: number = 5): number {
+    if (files.length === 0) return 1;
+
+    // Try each depth from 1 to maxDepth and find the one that groups files best
+    for (let depth = 1; depth <= maxDepth; depth++) {
+      const prefixes = files.map(f => {
+        const parts = f.split('/');
+        const actualDepth = Math.min(parts.length - 1, depth);
+        return actualDepth === 0 ? '' : parts.slice(0, actualDepth).join('/');
+      });
+
+      const uniquePrefixes = new Set(prefixes);
+
+      // If all files share the same prefix at this depth, this is optimal
+      if (uniquePrefixes.size === 1) {
+        return depth;
+      }
+    }
+
+    // If no common prefix found, return maxDepth
+    return maxDepth;
+  }
+
+  /**
    * Get path prefix up to configured depth
    * Example: "src/components/Button/index.ts" with depth=2 -> "src/components"
    * Special cases:
@@ -92,10 +146,22 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
       );
     }
 
+    // Determine effective depth
+    let effectiveDepth: number;
+    if (config.depth === 'auto') {
+      // Auto-detect optimal depth
+      effectiveDepth = this.detectOptimalDepth(filteredFiles, config.maxDepth || 5);
+    } else {
+      effectiveDepth = config.depth;
+    }
+
     // Get path prefixes for all files
-    const prefixes = filteredFiles.map(file =>
-      this.getPathPrefix(file, config.depth)
-    );
+    const prefixes = filteredFiles.map(file => {
+      const fileDepth = config.depthOverrides
+        ? this.getDepthForFile(file, config)
+        : effectiveDepth;
+      return this.getPathPrefix(file, fileDepth);
+    });
 
     // Check if all prefixes are the same
     const uniquePrefixes = [...new Set(prefixes)];
@@ -109,15 +175,20 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
 
     if (uniquePrefixes.length > 1) {
       result.valid = false;
+
+      const depthInfo = config.depth === 'auto'
+        ? `auto (detected: ${effectiveDepth})`
+        : config.depthOverrides
+          ? `${config.depth} (with path-specific overrides)`
+          : String(config.depth);
+
       result.errors.push(
-        formatMessage(messages.multipleFolder, { depth: config.depth })
+        formatMessage(messages.multipleFolder, { depth: depthInfo })
       );
 
       // Sort prefixes for consistent output
       uniquePrefixes.sort().forEach(prefix => {
-        const filesInPrefix = filteredFiles.filter(f =>
-          this.getPathPrefix(f, config.depth) === prefix
-        );
+        const filesInPrefix = filteredFiles.filter((f, idx) => prefixes[idx] === prefix);
         const displayPrefix = prefix || '(root)';
         result.errors.push(`  [${displayPrefix}] (${filesInPrefix.length} files):`);
         filesInPrefix.forEach(f => result.errors.push(`    - ${f}`));
@@ -125,14 +196,12 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
 
       result.errors.push('');
       result.errors.push(`✖ ${messages.rule}`);
-      result.errors.push(`✖ ${formatMessage(messages.depth, { depth: config.depth })}`);
+      result.errors.push(`✖ ${formatMessage(messages.depth, { depth: depthInfo })}`);
       result.errors.push(`✖ ${messages.solution}`);
       result.errors.push('');
       result.errors.push(`💡 ${messages.quickFixes}`);
       uniquePrefixes.forEach(prefix => {
-        const filesInPrefix = filteredFiles.filter(f =>
-          this.getPathPrefix(f, config.depth) === prefix
-        );
+        const filesInPrefix = filteredFiles.filter((f, idx) => prefixes[idx] === prefix);
         const displayPrefix = prefix || '(root)';
         result.errors.push(`   git reset ${filesInPrefix.join(' ')}  # ${messages.unstage} [${displayPrefix}]`);
       });
@@ -160,9 +229,12 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
 
     const trimmedMsg = commitMsg.trim();
 
+    // Get effective depth for examples
+    const effectiveDepth = config.depth === 'auto' ? (config.maxDepth || 3) : config.depth;
+
     // Generate dynamic examples based on depth
-    const examplePrefix = this.generateExamplePrefix(config.depth);
-    const depthFormat = this.generateDepthFormat(config.depth);
+    const examplePrefix = this.generateExamplePrefix(effectiveDepth);
+    const depthFormat = this.generateDepthFormat(effectiveDepth);
 
     // Check if message is empty
     if (!trimmedMsg) {
@@ -189,7 +261,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
         depthFormat
       })}`);
       result.errors.push(`✖ ${formatMessage(messages.commitMsgDepthInfo, {
-        depth: config.depth,
+        depth: effectiveDepth,
         examplePrefix
       })}`);
       result.errors.push('');
