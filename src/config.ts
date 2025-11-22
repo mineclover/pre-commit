@@ -1,8 +1,13 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import type { Config } from './types.js';
+import type { Config, FolderBasedConfig } from './types.js';
 
-const DEFAULT_CONFIG: Config = {
+/**
+ * Default configuration for folder-based preset
+ * (maintains backward compatibility)
+ */
+const DEFAULT_CONFIG: FolderBasedConfig = {
+  preset: 'folder-based',
   depth: 2,
   logFile: '.commit-logs/violations.log',
   enabled: true,
@@ -13,12 +18,22 @@ const DEFAULT_CONFIG: Config = {
   language: 'en'
 };
 
+/**
+ * Load configuration from .precommitrc.json
+ * Falls back to default folder-based preset if not found
+ */
 export function loadConfig(): Config {
   try {
     const configPath = join(process.cwd(), '.precommitrc.json');
     const configContent = readFileSync(configPath, 'utf-8');
     const userConfig = JSON.parse(configContent);
-    const config = { ...DEFAULT_CONFIG, ...userConfig };
+
+    // If no preset specified, default to folder-based for backward compatibility
+    if (!userConfig.preset) {
+      userConfig.preset = 'folder-based';
+    }
+
+    const config = { ...DEFAULT_CONFIG, ...userConfig } as Config;
     validateConfig(config);
     return config;
   } catch (error: any) {
@@ -29,16 +44,30 @@ export function loadConfig(): Config {
   }
 }
 
+/**
+ * Validate configuration based on preset type
+ */
 function validateConfig(config: Config): void {
-  if (config.depth < 1 || config.depth > 10) {
-    throw new Error(`Invalid depth: ${config.depth}. Must be between 1 and 10.`);
+  // Validate preset type
+  const validPresets = ['folder-based', 'conventional-commits', 'custom'];
+  if (!validPresets.includes(config.preset)) {
+    throw new Error(`Invalid preset: ${config.preset}. Must be one of: ${validPresets.join(', ')}`);
   }
 
-  if (config.maxFiles && (config.maxFiles < 1 || config.maxFiles > 1000)) {
-    throw new Error(`Invalid maxFiles: ${config.maxFiles}. Must be between 1 and 1000.`);
-  }
+  // Preset-specific validation
+  if (config.preset === 'folder-based') {
+    const folderConfig = config as FolderBasedConfig;
 
-  if (!Array.isArray(config.ignorePaths)) {
-    throw new Error('ignorePaths must be an array');
+    if (folderConfig.depth < 1 || folderConfig.depth > 10) {
+      throw new Error(`Invalid depth: ${folderConfig.depth}. Must be between 1 and 10.`);
+    }
+
+    if (folderConfig.maxFiles && (folderConfig.maxFiles < 1 || folderConfig.maxFiles > 1000)) {
+      throw new Error(`Invalid maxFiles: ${folderConfig.maxFiles}. Must be between 1 and 1000.`);
+    }
+
+    if (!Array.isArray(folderConfig.ignorePaths)) {
+      throw new Error('ignorePaths must be an array');
+    }
   }
 }

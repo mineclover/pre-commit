@@ -4,6 +4,7 @@ import { writeFileSync } from 'fs';
 import { loadConfig } from './config.js';
 import { CommitValidator } from './validator.js';
 import { Logger } from './logger.js';
+import type { FolderBasedConfig } from './types.js';
 
 const git = simpleGit();
 
@@ -68,8 +69,11 @@ async function checkCommand() {
 
     console.log('\n📋 Validation Check\n');
     console.log('━'.repeat(60));
+    console.log(`Preset: ${config.preset}`);
     console.log(`Staged files: ${stagedFiles.length}`);
-    console.log(`Depth setting: ${config.depth}`);
+    if (config.preset === 'folder-based') {
+      console.log(`Depth setting: ${(config as FolderBasedConfig).depth}`);
+    }
     console.log('━'.repeat(60));
 
     if (result.valid) {
@@ -104,10 +108,14 @@ async function statusCommand() {
     console.log('\n📊 Status Report\n');
     console.log('━'.repeat(60));
     console.log('Configuration:');
+    console.log(`  - Preset: ${config.preset}`);
     console.log(`  - Enabled: ${config.enabled ? '✅' : '❌'}`);
-    console.log(`  - Depth: ${config.depth}`);
+    if (config.preset === 'folder-based') {
+      const folderConfig = config as FolderBasedConfig;
+      console.log(`  - Depth: ${folderConfig.depth}`);
+      console.log(`  - Ignored paths: ${folderConfig.ignorePaths.length} entries`);
+    }
     console.log(`  - Log file: ${config.logFile}`);
-    console.log(`  - Ignored paths: ${config.ignorePaths.length} entries`);
     console.log('━'.repeat(60));
     console.log('Git Status:');
     console.log(`  - Current branch: ${status.current || 'unknown'}`);

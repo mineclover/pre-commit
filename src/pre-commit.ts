@@ -5,6 +5,7 @@ import { CommitValidator } from './validator.js';
 import { Logger } from './logger.js';
 import { getStagedFiles } from './git-helper.js';
 import { getMessages, formatMessage, type Language } from './messages.js';
+import type { FolderBasedConfig } from './types.js';
 
 async function main() {
   try {
@@ -39,7 +40,9 @@ async function main() {
       console.error('━'.repeat(60));
       console.error(`\n💡 ${messages.aiSummary}`);
       console.error(`   - ${formatMessage(messages.stagedFiles, { count: stagedFiles.length })}`);
-      console.error(`   - ${formatMessage(messages.requiredDepth, { depth: config.depth })}`);
+      if (config.preset === 'folder-based') {
+        console.error(`   - ${formatMessage(messages.requiredDepth, { depth: (config as FolderBasedConfig).depth })}`);
+      }
       console.error(`   - ${formatMessage(messages.multipleFoldersDetected, { count: result.stats?.uniqueFolders || 0 })}`);
       console.error(`   - ${messages.actionRequired}\n`);
 

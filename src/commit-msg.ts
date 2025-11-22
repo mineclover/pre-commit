@@ -1,132 +1,8 @@
 #!/usr/bin/env node
 import { readFileSync } from 'fs';
 import { loadConfig } from './config.js';
-import { getMessages, formatMessage, type Language } from './messages.js';
-
-interface CommitMsgValidationResult {
-  valid: boolean;
-  errors: string[];
-}
-
-class CommitMessageValidator {
-  private minDescriptionLength = 3; // Minimum length for commit description
-  private messages;
-  private depth: number;
-  private examplePrefix: string;
-  private depthFormat: string;
-
-  constructor(depth: number, language: Language = 'en') {
-    this.depth = depth;
-    this.messages = getMessages(language);
-    this.examplePrefix = this.generateExamplePrefix(depth);
-    this.depthFormat = this.generateDepthFormat(depth);
-  }
-
-  /**
-   * Generate example prefix based on depth
-   * depth=1: [src]
-   * depth=2: [src/components]
-   * depth=3: [src/components/Button]
-   */
-  private generateExamplePrefix(depth: number): string {
-    const parts = ['src', 'components', 'Button', 'tests', 'hooks'];
-    return `[${parts.slice(0, Math.min(depth, parts.length)).join('/')}]`;
-  }
-
-  /**
-   * Generate depth format description
-   * depth=1: [folder]
-   * depth=2: [folder/path]
-   * depth=3: [folder/path/to]
-   */
-  private generateDepthFormat(depth: number): string {
-    const parts = ['folder', 'path', 'to', 'file'];
-    return `[${parts.slice(0, Math.min(depth, parts.length)).join('/')}]`;
-  }
-
-  /**
-   * Validate commit message format
-   * Expected format: [prefix] Description
-   * Valid prefixes: [folder/path], [root], [config]
-   */
-  validate(commitMsg: string): CommitMsgValidationResult {
-    const result: CommitMsgValidationResult = {
-      valid: true,
-      errors: []
-    };
-
-    const trimmedMsg = commitMsg.trim();
-
-    // Check if message is empty
-    if (!trimmedMsg) {
-      result.valid = false;
-      result.errors.push(this.messages.commitMsgInvalid);
-      result.errors.push(formatMessage(this.messages.commitMsgMissingPrefix, {
-        examplePrefix: this.examplePrefix
-      }));
-      return result;
-    }
-
-    // Check if message starts with [prefix]
-    const prefixMatch = trimmedMsg.match(/^\[([^\]]+)\]\s*(.*)$/);
-
-    if (!prefixMatch) {
-      result.valid = false;
-      result.errors.push(this.messages.commitMsgInvalid);
-      result.errors.push(formatMessage(this.messages.commitMsgMissingPrefix, {
-        examplePrefix: this.examplePrefix
-      }));
-      result.errors.push('');
-      result.errors.push(`✖ ${this.messages.commitMsgRule}`);
-      result.errors.push(`✖ ${formatMessage(this.messages.commitMsgValidPrefixes, {
-        depthFormat: this.depthFormat
-      })}`);
-      result.errors.push(`✖ ${formatMessage(this.messages.commitMsgDepthInfo, {
-        depth: this.depth,
-        examplePrefix: this.examplePrefix
-      })}`);
-      result.errors.push('');
-      result.errors.push(`💡 ${formatMessage(this.messages.commitMsgExample, {
-        examplePrefix: this.examplePrefix
-      })}`);
-      return result;
-    }
-
-    const [, prefix, description] = prefixMatch;
-
-    // Validate prefix format (should not be empty)
-    if (!prefix || prefix.trim() === '') {
-      result.valid = false;
-      result.errors.push(formatMessage(this.messages.commitMsgInvalidPrefix, {
-        depthFormat: this.depthFormat
-      }));
-      return result;
-    }
-
-    // Check if description exists
-    const trimmedDescription = description.trim();
-    if (!trimmedDescription) {
-      result.valid = false;
-      result.errors.push(this.messages.commitMsgMissingDescription);
-      result.errors.push('');
-      result.errors.push(`💡 ${formatMessage(this.messages.commitMsgExample, {
-        examplePrefix: this.examplePrefix
-      })}`);
-      return result;
-    }
-
-    // Check description length
-    if (trimmedDescription.length < this.minDescriptionLength) {
-      result.valid = false;
-      result.errors.push(
-        formatMessage(this.messages.commitMsgTooShort, { minLength: this.minDescriptionLength })
-      );
-      return result;
-    }
-
-    return result;
-  }
-}
+import { CommitValidator } from './validator.js';
+import { getMessages, type Language } from './messages.js';
 
 async function main() {
   try {
@@ -166,9 +42,9 @@ async function main() {
       process.exit(0);
     }
 
-    // Validate commit message
-    const validator = new CommitMessageValidator(config.depth, config.language as Language);
-    const result = validator.validate(commitMsg);
+    // Validate commit message using preset
+    const validator = new CommitValidator(config);
+    const result = validator.validateCommitMessage(commitMsg);
 
     if (!result.valid) {
       console.error(`\n❌ ${messages.commitMsgBlocked}\n`);
@@ -176,6 +52,8 @@ async function main() {
       result.errors.forEach(err => console.error(err));
       console.error('━'.repeat(60));
       console.error(`\n📝 Your commit message:\n   "${commitMsg.trim()}"\n`);
+      console.error(`\n📋 Current preset: ${validator.getPresetName()}`);
+      console.error(`   ${validator.getPresetDescription()}\n`);
       process.exit(1);
     }
 
