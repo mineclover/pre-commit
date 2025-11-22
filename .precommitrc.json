@@ -1,4 +1,5 @@
 {
+  "preset": "folder-based",
   "depth": 2,
   "logFile": ".commit-logs/violations.log",
   "enabled": true,
