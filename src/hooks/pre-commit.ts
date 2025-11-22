@@ -1,4 +1,7 @@
 #!/usr/bin/env node
+/**
+ * Pre-commit hook - validates that staged files follow folder-based rules
+ */
 import { readFileSync, writeFileSync } from 'fs';
 import { loadConfig } from '../core/config.js';
 import { CommitValidator } from '../core/validator.js';
