@@ -1,17 +1,24 @@
-import type {
-  Preset,
-  Config,
-  FolderBasedConfig,
-  ValidationResult,
-  CommitMsgValidationResult
-} from '../types.js';
-import { getMessages, formatMessage, type Language } from '../messages.js';
+import type { Preset, ValidationResult, CommitMsgValidationResult } from '../base/types.js';
+import type { FolderBasedConfig } from './types.js';
+import { getMessages, formatMessage, type Language } from '../../core/messages.js';
 
 /**
- * Folder-based preset
- * Enforces that all staged files must be in the same folder path up to configured depth
+ * Folder-based Preset
+ *
+ * Enforces that all staged files must be in the same folder path up to configured depth.
+ * Automatically generates commit message prefixes based on the common folder path.
+ *
+ * @example
+ * // depth=2
+ * // Files: src/components/Button.tsx, src/components/Input.tsx
+ * // Prefix: [src/components]
+ *
+ * @example
+ * // depth=1
+ * // Files: src/utils.ts, src/helpers.ts
+ * // Prefix: [src]
  */
-export class FolderBasedPreset implements Preset {
+export class FolderBasedPreset implements Preset<FolderBasedConfig> {
   name = 'folder-based';
   description = 'Enforce folder-based commit rules with automatic prefix generation';
 
@@ -43,8 +50,7 @@ export class FolderBasedPreset implements Preset {
   /**
    * Validate that all staged files belong to the same folder prefix
    */
-  validateFiles(stagedFiles: string[], config: Config): ValidationResult {
-    const folderConfig = config as FolderBasedConfig;
+  validateFiles(stagedFiles: string[], config: FolderBasedConfig): ValidationResult {
     const messages = getMessages(config.language as Language);
 
     const result: ValidationResult = {
@@ -68,7 +74,7 @@ export class FolderBasedPreset implements Preset {
     }
 
     // Filter ignored files
-    const filteredFiles = this.filterIgnoredFiles(stagedFiles, folderConfig.ignorePaths);
+    const filteredFiles = this.filterIgnoredFiles(stagedFiles, config.ignorePaths);
     result.stats!.filteredFiles = filteredFiles.length;
     result.stats!.ignoredFiles = stagedFiles.length - filteredFiles.length;
 
@@ -80,15 +86,15 @@ export class FolderBasedPreset implements Preset {
     }
 
     // Check maxFiles limit
-    if (folderConfig.maxFiles && filteredFiles.length > folderConfig.maxFiles) {
+    if (config.maxFiles && filteredFiles.length > config.maxFiles) {
       result.warnings!.push(
-        `Warning: ${filteredFiles.length} files staged (limit: ${folderConfig.maxFiles})`
+        `Warning: ${filteredFiles.length} files staged (limit: ${config.maxFiles})`
       );
     }
 
     // Get path prefixes for all files
     const prefixes = filteredFiles.map(file =>
-      this.getPathPrefix(file, folderConfig.depth)
+      this.getPathPrefix(file, config.depth)
     );
 
     // Check if all prefixes are the same
@@ -104,13 +110,13 @@ export class FolderBasedPreset implements Preset {
     if (uniquePrefixes.length > 1) {
       result.valid = false;
       result.errors.push(
-        formatMessage(messages.multipleFolder, { depth: folderConfig.depth })
+        formatMessage(messages.multipleFolder, { depth: config.depth })
       );
 
       // Sort prefixes for consistent output
       uniquePrefixes.sort().forEach(prefix => {
         const filesInPrefix = filteredFiles.filter(f =>
-          this.getPathPrefix(f, folderConfig.depth) === prefix
+          this.getPathPrefix(f, config.depth) === prefix
         );
         const displayPrefix = prefix || '(root)';
         result.errors.push(`  [${displayPrefix}] (${filesInPrefix.length} files):`);
@@ -119,13 +125,13 @@ export class FolderBasedPreset implements Preset {
 
       result.errors.push('');
       result.errors.push(`✖ ${messages.rule}`);
-      result.errors.push(`✖ ${formatMessage(messages.depth, { depth: folderConfig.depth })}`);
+      result.errors.push(`✖ ${formatMessage(messages.depth, { depth: config.depth })}`);
       result.errors.push(`✖ ${messages.solution}`);
       result.errors.push('');
       result.errors.push(`💡 ${messages.quickFixes}`);
       uniquePrefixes.forEach(prefix => {
         const filesInPrefix = filteredFiles.filter(f =>
-          this.getPathPrefix(f, folderConfig.depth) === prefix
+          this.getPathPrefix(f, config.depth) === prefix
         );
         const displayPrefix = prefix || '(root)';
         result.errors.push(`   git reset ${filesInPrefix.join(' ')}  # ${messages.unstage} [${displayPrefix}]`);
@@ -143,8 +149,7 @@ export class FolderBasedPreset implements Preset {
    * Expected format: [prefix] Description
    * Valid prefixes: [folder/path], [root], [config]
    */
-  validateCommitMessage(commitMsg: string, config: Config): CommitMsgValidationResult {
-    const folderConfig = config as FolderBasedConfig;
+  validateCommitMessage(commitMsg: string, config: FolderBasedConfig): CommitMsgValidationResult {
     const messages = getMessages(config.language as Language);
     const minDescriptionLength = 3;
 
@@ -156,8 +161,8 @@ export class FolderBasedPreset implements Preset {
     const trimmedMsg = commitMsg.trim();
 
     // Generate dynamic examples based on depth
-    const examplePrefix = this.generateExamplePrefix(folderConfig.depth);
-    const depthFormat = this.generateDepthFormat(folderConfig.depth);
+    const examplePrefix = this.generateExamplePrefix(config.depth);
+    const depthFormat = this.generateDepthFormat(config.depth);
 
     // Check if message is empty
     if (!trimmedMsg) {
@@ -184,7 +189,7 @@ export class FolderBasedPreset implements Preset {
         depthFormat
       })}`);
       result.errors.push(`✖ ${formatMessage(messages.commitMsgDepthInfo, {
-        depth: folderConfig.depth,
+        depth: config.depth,
         examplePrefix
       })}`);
       result.errors.push('');
@@ -233,7 +238,7 @@ export class FolderBasedPreset implements Preset {
   /**
    * Generate commit message prefix from validation result
    */
-  getCommitPrefix(validationResult: ValidationResult, config: Config): string {
+  getCommitPrefix(validationResult: ValidationResult, config: FolderBasedConfig): string {
     const allFilesIgnored = validationResult.stats?.ignoredFiles === validationResult.stats?.totalFiles;
 
     if (allFilesIgnored) return '[config]';

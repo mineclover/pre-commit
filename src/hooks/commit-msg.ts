@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { readFileSync } from 'fs';
-import { loadConfig } from './config.js';
-import { CommitValidator } from './validator.js';
-import { getMessages, type Language } from './messages.js';
+import { loadConfig } from '../core/config.js';
+import { CommitValidator } from '../core/validator.js';
+import { getMessages, type Language } from '../core/messages.js';
 
 async function main() {
   try {

@@ -1,1 +1,1 @@
-node dist/commit-msg.js "$1"
+node dist/hooks/commit-msg.js "$1"

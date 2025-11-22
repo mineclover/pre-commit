@@ -1,5 +1,6 @@
-import type { Config, ValidationResult, CommitMsgValidationResult } from './types.js';
-import { PresetRegistry } from './presets/index.js';
+import type { Config } from './config.js';
+import type { ValidationResult, CommitMsgValidationResult } from '../presets/base/types.js';
+import { PresetRegistry } from '../presets/index.js';
 
 /**
  * CommitValidator - Wrapper class that delegates to preset implementations
@@ -11,7 +12,7 @@ export class CommitValidator {
 
   constructor(config: Config) {
     this.config = config;
-    this.preset = PresetRegistry.getPresetFromConfig(config);
+    this.preset = PresetRegistry.get(config.preset);
   }
 
   /**

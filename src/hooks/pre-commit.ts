@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from 'fs';
-import { loadConfig } from './config.js';
-import { CommitValidator } from './validator.js';
-import { Logger } from './logger.js';
-import { getStagedFiles } from './git-helper.js';
-import { getMessages, formatMessage, type Language } from './messages.js';
-import type { FolderBasedConfig } from './types.js';
+import { loadConfig } from '../core/config.js';
+import { CommitValidator } from '../core/validator.js';
+import { Logger } from '../core/logger.js';
+import { getStagedFiles } from '../core/git-helper.js';
+import { getMessages, formatMessage, type Language } from '../core/messages.js';
+import type { FolderBasedConfig } from '../presets/folder-based/types.js';
 
 async function main() {
   try {

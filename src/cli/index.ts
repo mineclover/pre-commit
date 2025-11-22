@@ -1,10 +1,10 @@
 #!/usr/bin/env node
 import { simpleGit } from 'simple-git';
 import { writeFileSync } from 'fs';
-import { loadConfig } from './config.js';
-import { CommitValidator } from './validator.js';
-import { Logger } from './logger.js';
-import type { FolderBasedConfig } from './types.js';
+import { loadConfig } from '../core/config.js';
+import { CommitValidator } from '../core/validator.js';
+import { Logger } from '../core/logger.js';
+import type { FolderBasedConfig } from '../presets/folder-based/types.js';
 
 const git = simpleGit();
 

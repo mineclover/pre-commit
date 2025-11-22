@@ -1,6 +1,6 @@
 {
   "preset": "folder-based",
-  "depth": 2,
+  "depth": 3,
   "logFile": ".commit-logs/violations.log",
   "enabled": true,
   "ignorePaths": [

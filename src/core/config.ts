@@ -1,6 +1,12 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import type { Config, FolderBasedConfig } from './types.js';
+import type { FolderBasedConfig } from '../presets/folder-based/types.js';
+import type { ConventionalCommitsConfig } from '../presets/conventional-commits/types.js';
+
+/**
+ * Union type for all preset configs
+ */
+export type Config = FolderBasedConfig | ConventionalCommitsConfig;
 
 /**
  * Default configuration for folder-based preset
@@ -8,7 +14,7 @@ import type { Config, FolderBasedConfig } from './types.js';
  */
 const DEFAULT_CONFIG: FolderBasedConfig = {
   preset: 'folder-based',
-  depth: 2,
+  depth: 3,
   logFile: '.commit-logs/violations.log',
   enabled: true,
   ignorePaths: [],
@@ -49,7 +55,7 @@ export function loadConfig(): Config {
  */
 function validateConfig(config: Config): void {
   // Validate preset type
-  const validPresets = ['folder-based', 'conventional-commits', 'custom'];
+  const validPresets = ['folder-based', 'conventional-commits'];
   if (!validPresets.includes(config.preset)) {
     throw new Error(`Invalid preset: ${config.preset}. Must be one of: ${validPresets.join(', ')}`);
   }
