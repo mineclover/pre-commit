@@ -1,0 +1,64 @@
+{
+  "examples": {
+    "basic": {
+      "description": "Basic folder-based with fixed depth",
+      "config": {
+        "enabled": true,
+        "preset": "folder-based",
+        "depth": 3,
+        "ignorePaths": ["dist", "node_modules", ".git"],
+        "language": "en"
+      }
+    },
+    "pathSpecificDepth": {
+      "description": "Different depths for different paths",
+      "config": {
+        "enabled": true,
+        "preset": "folder-based",
+        "depth": 3,
+        "depthOverrides": {
+          "src/hooks": 2,
+          "src/core": 2,
+          "src/presets/folder-based": 3,
+          "src/presets/conventional-commits": 3,
+          ".husky": 1,
+          "docs": 1
+        },
+        "ignorePaths": ["dist", "node_modules", ".git"],
+        "language": "en"
+      }
+    },
+    "autoDepth": {
+      "description": "Automatically detect optimal depth",
+      "config": {
+        "enabled": true,
+        "preset": "folder-based",
+        "depth": "auto",
+        "maxDepth": 5,
+        "ignorePaths": ["dist", "node_modules", ".git"],
+        "language": "en"
+      }
+    },
+    "autoWithOverrides": {
+      "description": "Auto depth with specific overrides",
+      "config": {
+        "enabled": true,
+        "preset": "folder-based",
+        "depth": "auto",
+        "maxDepth": 4,
+        "depthOverrides": {
+          ".husky": 1,
+          "docs": 1
+        },
+        "ignorePaths": ["dist", "node_modules", ".git"],
+        "language": "en"
+      }
+    }
+  },
+  "notes": {
+    "depth": "Use a number (1-10) for fixed depth, or 'auto' for automatic detection",
+    "depthOverrides": "Path-specific depth settings. Longest matching path wins.",
+    "maxDepth": "Only applies when depth='auto'. Limits maximum depth to detect.",
+    "autoMode": "Auto mode finds the shallowest depth where all files share a common prefix"
+  }
+}
