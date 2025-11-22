@@ -64,8 +64,27 @@ function validateConfig(config: Config): void {
   if (config.preset === 'folder-based') {
     const folderConfig = config as FolderBasedConfig;
 
-    if (folderConfig.depth < 1 || folderConfig.depth > 10) {
-      throw new Error(`Invalid depth: ${folderConfig.depth}. Must be between 1 and 10.`);
+    // Validate depth
+    if (folderConfig.depth !== 'auto') {
+      if (typeof folderConfig.depth !== 'number' || folderConfig.depth < 1 || folderConfig.depth > 10) {
+        throw new Error(`Invalid depth: ${folderConfig.depth}. Must be between 1 and 10, or 'auto'.`);
+      }
+    }
+
+    // Validate maxDepth (for auto mode)
+    if (folderConfig.maxDepth !== undefined) {
+      if (folderConfig.maxDepth < 1 || folderConfig.maxDepth > 10) {
+        throw new Error(`Invalid maxDepth: ${folderConfig.maxDepth}. Must be between 1 and 10.`);
+      }
+    }
+
+    // Validate depthOverrides
+    if (folderConfig.depthOverrides) {
+      for (const [path, depth] of Object.entries(folderConfig.depthOverrides)) {
+        if (depth < 1 || depth > 10) {
+          throw new Error(`Invalid depth override for "${path}": ${depth}. Must be between 1 and 10.`);
+        }
+      }
     }
 
     if (folderConfig.maxFiles && (folderConfig.maxFiles < 1 || folderConfig.maxFiles > 1000)) {
