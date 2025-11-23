@@ -1,6 +1,6 @@
 {
   "name": "pre-commit-folder-enforcer",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "Pre-commit hook enforcing folder-based commit rules with auto-prefix generation and extensible preset system",
   "type": "module",
   "main": "dist/cli.js",
@@ -52,7 +52,9 @@
     "dist",
     "README.md",
     "LICENSE",
+    "CHANGELOG.md",
+    "CONTRIBUTING.md",
     "CONVENTIONS.md",
-    "PROJECT_SUMMARY.md"
+    "USAGE.md"
   ]
 }
