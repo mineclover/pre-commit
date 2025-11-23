@@ -4,6 +4,7 @@ import { writeFileSync } from 'fs';
 import { loadConfig } from '../core/config.js';
 import { CommitValidator } from '../core/validator.js';
 import { Logger } from '../core/logger.js';
+import { CLI_DISPLAY } from '../core/constants.js';
 import type { FolderBasedConfig } from '../presets/folder-based/types.js';
 
 const git = simpleGit();
@@ -263,13 +264,13 @@ async function statsCommand() {
     console.log('Prefix distribution:');
     sorted.forEach(([prefix, count]) => {
       const percentage = ((count / log.all.length) * 100).toFixed(1);
-      const bar = '█'.repeat(Math.floor(count / 2));
+      const bar = '█'.repeat(Math.floor(count / CLI_DISPLAY.BAR_SCALE_FACTOR));
       console.log(`  [${prefix.padEnd(20)}] ${count.toString().padStart(3)} (${percentage}%) ${bar}`);
     });
 
     if (noPrefixCommits.length > 0) {
       console.log(`\n⚠️  Commits without prefix: ${noPrefixCommits.length}`);
-      if (noPrefixCommits.length <= 5) {
+      if (noPrefixCommits.length <= CLI_DISPLAY.MAX_COMMITS_TO_SHOW) {
         noPrefixCommits.forEach(msg => console.log(`    - ${msg}`));
       }
     }
