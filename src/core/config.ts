@@ -38,8 +38,26 @@ const DEFAULT_CONFIG: FolderBasedConfig = {
 };
 
 /**
- * Load configuration from .precommitrc.json
- * Falls back to default folder-based preset if not found
+ * Load and validate configuration from .precommitrc.json
+ *
+ * Reads the configuration file from the current working directory and validates it.
+ * If the file doesn't exist, returns the default folder-based configuration.
+ * If no preset is specified in the config file, defaults to 'folder-based' for
+ * backward compatibility.
+ *
+ * @returns Validated configuration object
+ * @throws {ConfigValidationError} If configuration is invalid
+ * @throws {SyntaxError} If JSON parsing fails
+ *
+ * @example
+ * // With .precommitrc.json present
+ * const config = loadConfig();
+ * console.log(config.preset); // "folder-based" or "conventional-commits"
+ *
+ * @example
+ * // Without .precommitrc.json (uses defaults)
+ * const config = loadConfig();
+ * // Returns: { preset: 'folder-based', depth: 3, enabled: true, ... }
  */
 export function loadConfig(): Config {
   try {
