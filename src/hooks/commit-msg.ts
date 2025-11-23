@@ -3,6 +3,7 @@ import { readFileSync } from 'fs';
 import { loadConfig } from '../core/config.js';
 import { CommitValidator } from '../core/validator.js';
 import { getMessages, type Language } from '../core/messages.js';
+import { SPECIAL_COMMIT_TYPES } from '../core/constants.js';
 
 async function main() {
   try {
@@ -33,11 +34,9 @@ async function main() {
 
     // Skip validation for merge commits, revert commits, etc.
     const firstLine = commitMsg.split('\n')[0];
-    if (
-      firstLine.startsWith('Merge ') ||
-      firstLine.startsWith('Revert ') ||
-      firstLine.startsWith('Squash ')
-    ) {
+    const isSpecialCommit = SPECIAL_COMMIT_TYPES.some(type => firstLine.startsWith(type));
+
+    if (isSpecialCommit) {
       console.log('✅ Special commit type detected, skipping validation');
       process.exit(0);
     }
