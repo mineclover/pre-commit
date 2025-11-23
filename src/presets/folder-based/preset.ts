@@ -216,8 +216,11 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
       return result;
     }
 
+    // For multi-line messages, validate only the first line
+    const firstLine = trimmedMsg.split('\n')[0];
+
     // Check if message starts with [prefix]
-    const prefixMatch = trimmedMsg.match(/^\[([^\]]+)\]\s*(.*)$/);
+    const prefixMatch = firstLine.match(/^\[([^\]]+)\]\s*(.*)$/);
 
     if (!prefixMatch) {
       result.valid = false;
