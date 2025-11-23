@@ -1,5 +1,18 @@
+/**
+ * @module messages
+ * @description Internationalization (i18n) system for user-facing messages
+ *
+ * This module provides localized messages for both English and Korean,
+ * supporting validation errors, commit message formatting, and CLI output.
+ * It includes a template system for dynamic message formatting.
+ */
+
 export type Language = 'en' | 'ko';
 
+/**
+ * Message interface defining all user-facing strings
+ * Used for internationalization support
+ */
 export interface Messages {
   commitBlocked: string;
   validationPassed: string;
@@ -92,10 +105,42 @@ const MESSAGES_MAP: Record<Language, Messages> = {
   ko: KO_MESSAGES
 };
 
+/**
+ * Get localized messages for the specified language
+ *
+ * @param lang - The language code ('en' or 'ko')
+ * @returns Messages object with all localized strings
+ *
+ * @example
+ * const messages = getMessages('ko');
+ * console.log(messages.validationPassed); // "검증 통과"
+ *
+ * @example
+ * const messages = getMessages('en');
+ * console.log(messages.commitBlocked); // "COMMIT BLOCKED - Folder Rule Violation"
+ */
 export function getMessages(lang: Language = 'en'): Messages {
   return MESSAGES_MAP[lang] || EN_MESSAGES;
 }
 
+/**
+ * Format a message template with dynamic parameters
+ *
+ * Replaces placeholders in the format `{key}` with corresponding values
+ * from the params object.
+ *
+ * @param template - Message template with {placeholder} syntax
+ * @param params - Object containing replacement values
+ * @returns Formatted message string
+ *
+ * @example
+ * formatMessage('Staged files: {count}', { count: 5 });
+ * // Returns: "Staged files: 5"
+ *
+ * @example
+ * formatMessage('DEPTH: {depth} levels', { depth: 3 });
+ * // Returns: "DEPTH: 3 levels"
+ */
 export function formatMessage(template: string, params: Record<string, any>): string {
   let result = template;
   Object.entries(params).forEach(([key, value]) => {
