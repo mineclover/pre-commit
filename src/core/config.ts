@@ -2,6 +2,19 @@ import { readFileSync } from 'fs';
 import { join } from 'path';
 import type { FolderBasedConfig } from '../presets/folder-based/types.js';
 import type { ConventionalCommitsConfig } from '../presets/conventional-commits/types.js';
+import {
+  DEPTH_CONSTRAINTS,
+  FILE_CONSTRAINTS,
+  LOG_DEFAULTS,
+  PRESET_NAMES,
+} from './constants.js';
+import {
+  validateDepth,
+  validateMaxFiles,
+  validatePathArray,
+  validateDepthOverrides,
+} from './utils/validation-utils.js';
+import { ConfigValidationError } from './errors.js';
 
 /**
  * Union type for all preset configs
@@ -13,14 +26,14 @@ export type Config = FolderBasedConfig | ConventionalCommitsConfig;
  * (maintains backward compatibility)
  */
 const DEFAULT_CONFIG: FolderBasedConfig = {
-  preset: 'folder-based',
-  depth: 3,
-  logFile: '.commit-logs/violations.log',
+  preset: PRESET_NAMES.FOLDER_BASED,
+  depth: DEPTH_CONSTRAINTS.DEFAULT,
+  logFile: LOG_DEFAULTS.FILE_PATH,
   enabled: true,
   ignorePaths: [],
-  maxFiles: 100,
+  maxFiles: FILE_CONSTRAINTS.DEFAULT_MAX_FILES,
   verbose: false,
-  logMaxAgeHours: 24,
+  logMaxAgeHours: LOG_DEFAULTS.MAX_AGE_HOURS,
   language: 'en'
 };
 
@@ -55,44 +68,42 @@ export function loadConfig(): Config {
  */
 function validateConfig(config: Config): void {
   // Validate preset type
-  const validPresets = ['folder-based', 'conventional-commits'];
+  const validPresets = [PRESET_NAMES.FOLDER_BASED, PRESET_NAMES.CONVENTIONAL_COMMITS];
   if (!validPresets.includes(config.preset)) {
-    throw new Error(`Invalid preset: ${config.preset}. Must be one of: ${validPresets.join(', ')}`);
+    throw new ConfigValidationError(
+      `Invalid preset: ${config.preset}. Must be one of: ${validPresets.join(', ')}`,
+      'preset',
+      config.preset
+    );
   }
 
   // Preset-specific validation
-  if (config.preset === 'folder-based') {
+  if (config.preset === PRESET_NAMES.FOLDER_BASED) {
     const folderConfig = config as FolderBasedConfig;
 
-    // Validate depth
-    if (folderConfig.depth !== 'auto') {
-      if (typeof folderConfig.depth !== 'number' || folderConfig.depth < 1 || folderConfig.depth > 10) {
-        throw new Error(`Invalid depth: ${folderConfig.depth}. Must be between 1 and 10, or 'auto'.`);
+    try {
+      // Validate depth
+      validateDepth(folderConfig.depth, 'depth');
+
+      // Validate maxDepth (for auto mode)
+      if (folderConfig.maxDepth !== undefined) {
+        validateDepth(folderConfig.maxDepth, 'maxDepth');
       }
-    }
 
-    // Validate maxDepth (for auto mode)
-    if (folderConfig.maxDepth !== undefined) {
-      if (folderConfig.maxDepth < 1 || folderConfig.maxDepth > 10) {
-        throw new Error(`Invalid maxDepth: ${folderConfig.maxDepth}. Must be between 1 and 10.`);
+      // Validate depthOverrides
+      validateDepthOverrides(folderConfig.depthOverrides);
+
+      // Validate maxFiles
+      validateMaxFiles(folderConfig.maxFiles);
+
+      // Validate ignorePaths
+      validatePathArray(folderConfig.ignorePaths, 'ignorePaths');
+
+    } catch (error) {
+      if (error instanceof ConfigValidationError) {
+        throw error;
       }
-    }
-
-    // Validate depthOverrides
-    if (folderConfig.depthOverrides) {
-      for (const [path, depth] of Object.entries(folderConfig.depthOverrides)) {
-        if (depth < 1 || depth > 10) {
-          throw new Error(`Invalid depth override for "${path}": ${depth}. Must be between 1 and 10.`);
-        }
-      }
-    }
-
-    if (folderConfig.maxFiles && (folderConfig.maxFiles < 1 || folderConfig.maxFiles > 1000)) {
-      throw new Error(`Invalid maxFiles: ${folderConfig.maxFiles}. Must be between 1 and 1000.`);
-    }
-
-    if (!Array.isArray(folderConfig.ignorePaths)) {
-      throw new Error('ignorePaths must be an array');
+      throw new ConfigValidationError((error as Error).message);
     }
   }
 }
