@@ -1,4 +1,25 @@
 #!/usr/bin/env node
+/**
+ * @module cli
+ * @description Command-line interface for pre-commit validation and analysis
+ *
+ * This module provides a comprehensive CLI tool for managing and monitoring
+ * the pre-commit validation system. It includes commands for:
+ * - Validating staged files before commit
+ * - Checking configuration and system status
+ * - Managing log files and cleanup
+ * - Analyzing commit history statistics
+ * - Initializing new configurations
+ *
+ * @example
+ * ```bash
+ * precommit check          # Validate staged files
+ * precommit status         # Show current status
+ * precommit stats          # Show commit statistics
+ * precommit cleanup        # Clean up old logs
+ * ```
+ */
+
 import { simpleGit } from 'simple-git';
 import { writeFileSync } from 'fs';
 import { loadConfig } from '../core/config.js';
