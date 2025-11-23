@@ -63,3 +63,9 @@ export const EXAMPLE_PATHS = {
   FOLDERS: ['src', 'components', 'Button', 'tests', 'hooks'] as const,
   GENERIC: ['folder', 'path', 'to', 'file'] as const,
 } as const;
+
+// CLI display limits
+export const CLI_DISPLAY = {
+  MAX_COMMITS_TO_SHOW: 5,
+  BAR_SCALE_FACTOR: 2,
+} as const;
