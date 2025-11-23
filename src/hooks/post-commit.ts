@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-import { loadConfig } from './config.js';
-import { Logger } from './logger.js';
+import { loadConfig } from '../core/config.js';
+import { Logger } from '../core/logger.js';
 
 async function main() {
   try {

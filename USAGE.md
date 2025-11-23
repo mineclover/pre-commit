@@ -1,48 +1,152 @@
 # 사용 가이드
 
-## 빠른 시작
+Pre-commit Folder Enforcer의 상세한 사용 방법을 설명합니다.
 
-### 1. 설치
+## 📦 설치
 
-#### 옵션 A: 새 프로젝트
+### 자동 설치 (권장)
+
+가장 쉬운 방법은 자동 설치 스크립트를 사용하는 것입니다:
+
 ```bash
-git clone <this-repo>
-cd pre-commit-folder-enforcer
+# curl 사용
+curl -fsSL https://raw.githubusercontent.com/mineclover/pre-commit/main/install.sh | bash
+
+# 또는 wget 사용
+wget -qO- https://raw.githubusercontent.com/mineclover/pre-commit/main/install.sh | bash
+
+# 특정 디렉토리에 설치
+curl -fsSL https://raw.githubusercontent.com/mineclover/pre-commit/main/install.sh | bash -s my-project
+```
+
+자동 설치 스크립트는 다음을 수행합니다:
+1. ✓ Node.js, npm, git 설치 확인
+2. ✓ 저장소 클론
+3. ✓ 의존성 설치
+4. ✓ 프로젝트 빌드
+5. ✓ 기본 설정 파일 생성
+6. ✓ Git hooks 설정
+
+### 수동 설치
+
+더 세밀한 제어가 필요한 경우 수동으로 설치하세요:
+
+```bash
+# 1. 저장소 클론
+git clone https://github.com/mineclover/pre-commit.git
+cd pre-commit
+
+# 2. 의존성 설치
 npm install
+
+# 3. 빌드
 npm run build
+
+# 4. 설정 파일 생성
+npm run precommit init
+
+# 5. Git hooks 설정
+npm run prepare
 ```
 
-#### 옵션 B: 기존 프로젝트에 통합
+### 기존 프로젝트에 통합
+
+기존 프로젝트에 통합하려면:
+
 ```bash
-# 필요한 파일들 복사
-cp -r /path/to/pre-commit/{package.json,tsconfig.json,.precommitrc.json,src,.husky} /your/project/
+# 1. 서브모듈로 추가
+git submodule add https://github.com/mineclover/pre-commit.git tools/pre-commit
+cd tools/pre-commit
+npm install && npm run build
 
-cd /your/project
-npm install
-npm run build
+# 2. 또는 필요한 파일만 복사
+cp -r tools/pre-commit/{package.json,tsconfig.json,.precommitrc.json,src,.husky} .
+npm install && npm run build
 ```
 
-#### 옵션 C: npm package (향후 지원 예정)
-```bash
-npm install pre-commit-folder-enforcer --save-dev
-```
+## ⚙️ 설정
 
-### 2. 설정 조정
+### 기본 설정
 
-`.precommitrc.json` 파일을 프로젝트에 맞게 수정:
+`.precommitrc.json` 파일을 프로젝트 루트에 생성:
 
 ```json
 {
-  "depth": 2,
+  "preset": "folder-based",
+  "depth": 3,
   "logFile": ".commit-logs/violations.log",
   "enabled": true,
   "ignorePaths": [
     "package.json",
     "package-lock.json",
-    ".gitignore"
-  ]
+    "tsconfig.json",
+    ".gitignore",
+    "README.md"
+  ],
+  "maxFiles": 100,
+  "verbose": false,
+  "language": "en",
+  "logMaxAgeHours": 24
 }
 ```
+
+### Preset 시스템
+
+프로젝트는 **Preset 패턴**을 사용하여 다양한 검증 규칙을 지원합니다:
+
+#### 1. folder-based (기본)
+폴더 경로 기반으로 커밋을 제한:
+```json
+{
+  "preset": "folder-based",
+  "depth": 3
+}
+```
+
+#### 2. conventional-commits
+Conventional Commits 스펙 준수:
+```json
+{
+  "preset": "conventional-commits"
+}
+```
+
+### 고급 Depth 설정
+
+#### 고정 Depth
+```json
+{
+  "depth": 2
+}
+```
+- `depth: 2` → `[folder/path]` 형식
+- `depth: 3` → `[folder/path/to]` 형식
+
+#### 자동 Depth 감지
+```json
+{
+  "depth": "auto",
+  "maxDepth": 5
+}
+```
+- 파일들의 공통 경로를 자동으로 감지
+- `maxDepth`로 최대 깊이 제한
+
+#### 경로별 Depth Override
+```json
+{
+  "depth": 3,
+  "depthOverrides": {
+    "src/hooks": 2,
+    "src/core": 2,
+    "src/presets/folder-based": 3,
+    ".husky": 1,
+    "docs": 1
+  }
+}
+```
+- 특정 경로에 다른 depth 적용
+- 가장 긴 매칭 경로가 우선 적용
 
 ## 실전 시나리오
 

@@ -1,0 +1,39 @@
+# Source files (only dist/ should be published)
+src/
+tsconfig.json
+
+# Development files
+.husky/
+.git/
+.gitignore
+node_modules/
+
+# Documentation (keep README.md, but exclude detailed docs)
+CONVENTIONS.md
+CONVENTION_CHECKLIST.md
+PROJECT_SUMMARY.md
+.precommitrc.examples.json
+
+# Build artifacts
+*.log
+*.tsbuildinfo
+.precommit.log
+
+# IDE and OS files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+tests/
+*.test.ts
+*.spec.ts
+
+# CI/CD
+.github/
+
+# Development configuration
+.precommitrc.json

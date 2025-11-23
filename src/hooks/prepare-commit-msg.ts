@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 import { readFileSync, writeFileSync } from 'fs';
-import { loadConfig } from './config.js';
-import { CommitValidator } from './validator.js';
-import { getStagedFiles } from './git-helper.js';
+import { loadConfig } from '../core/config.js';
+import { CommitValidator } from '../core/validator.js';
+import { getStagedFiles } from '../core/git-helper.js';
 
 async function main() {
   try {
