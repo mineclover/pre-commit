@@ -1,6 +1,15 @@
 import type { Preset, ValidationResult, CommitMsgValidationResult } from '../base/types.js';
 import type { FolderBasedConfig } from './types.js';
 import { getMessages, formatMessage, type Language } from '../../core/messages.js';
+import {
+  getPathPrefix,
+  filterIgnoredFiles,
+  findLongestMatchingPrefix,
+} from '../../core/utils/path-utils.js';
+import {
+  COMMIT_MESSAGE,
+  EXAMPLE_PATHS,
+} from '../../core/constants.js';
 
 /**
  * Folder-based Preset
@@ -34,19 +43,10 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
     }
 
     // Find matching override (longest match wins)
-    let matchedDepth = baseDepth;
-    let longestMatch = '';
+    const prefixes = Object.keys(config.depthOverrides);
+    const matchedPrefix = findLongestMatchingPrefix(filePath, prefixes);
 
-    for (const [pathPrefix, depth] of Object.entries(config.depthOverrides)) {
-      if (filePath.startsWith(pathPrefix + '/') || filePath.startsWith(pathPrefix)) {
-        if (pathPrefix.length > longestMatch.length) {
-          longestMatch = pathPrefix;
-          matchedDepth = depth;
-        }
-      }
-    }
-
-    return matchedDepth;
+    return matchedPrefix ? config.depthOverrides[matchedPrefix] : baseDepth;
   }
 
   /**
@@ -58,12 +58,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
 
     // Try each depth from 1 to maxDepth and find the one that groups files best
     for (let depth = 1; depth <= maxDepth; depth++) {
-      const prefixes = files.map(f => {
-        const parts = f.split('/');
-        const actualDepth = Math.min(parts.length - 1, depth);
-        return actualDepth === 0 ? '' : parts.slice(0, actualDepth).join('/');
-      });
-
+      const prefixes = files.map(f => getPathPrefix(f, depth));
       const uniquePrefixes = new Set(prefixes);
 
       // If all files share the same prefix at this depth, this is optimal
@@ -74,31 +69,6 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
 
     // If no common prefix found, return maxDepth
     return maxDepth;
-  }
-
-  /**
-   * Get path prefix up to configured depth
-   * Example: "src/components/Button/index.ts" with depth=2 -> "src/components"
-   * Special cases:
-   *   - "file.ts" with depth=2 -> "" (root, no prefix)
-   *   - "src/file.ts" with depth=2 -> "src"
-   */
-  private getPathPrefix(filePath: string, depth: number): string {
-    const parts = filePath.split('/');
-    const actualDepth = Math.min(parts.length - 1, depth); // -1 because last is filename
-    if (actualDepth === 0) return ''; // Root file
-    return parts.slice(0, actualDepth).join('/');
-  }
-
-  /**
-   * Filter out ignored files
-   */
-  private filterIgnoredFiles(files: string[], ignorePaths: string[]): string[] {
-    return files.filter(file => {
-      return !ignorePaths.some(ignorePath => {
-        return file === ignorePath || file.startsWith(ignorePath + '/');
-      });
-    });
   }
 
   /**
@@ -128,7 +98,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
     }
 
     // Filter ignored files
-    const filteredFiles = this.filterIgnoredFiles(stagedFiles, config.ignorePaths);
+    const filteredFiles = filterIgnoredFiles(stagedFiles, config.ignorePaths);
     result.stats!.filteredFiles = filteredFiles.length;
     result.stats!.ignoredFiles = stagedFiles.length - filteredFiles.length;
 
@@ -160,7 +130,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
       const fileDepth = config.depthOverrides
         ? this.getDepthForFile(file, config)
         : effectiveDepth;
-      return this.getPathPrefix(file, fileDepth);
+      return getPathPrefix(file, fileDepth);
     });
 
     // Check if all prefixes are the same
@@ -220,7 +190,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
    */
   validateCommitMessage(commitMsg: string, config: FolderBasedConfig): CommitMsgValidationResult {
     const messages = getMessages(config.language as Language);
-    const minDescriptionLength = 3;
+    const minDescriptionLength = COMMIT_MESSAGE.MIN_DESCRIPTION_LENGTH;
 
     const result: CommitMsgValidationResult = {
       valid: true,
@@ -325,7 +295,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
    * depth=3: [src/components/Button]
    */
   private generateExamplePrefix(depth: number): string {
-    const parts = ['src', 'components', 'Button', 'tests', 'hooks'];
+    const parts = EXAMPLE_PATHS.FOLDERS;
     return `[${parts.slice(0, Math.min(depth, parts.length)).join('/')}]`;
   }
 
@@ -336,7 +306,7 @@ export class FolderBasedPreset implements Preset<FolderBasedConfig> {
    * depth=3: [folder/path/to]
    */
   private generateDepthFormat(depth: number): string {
-    const parts = ['folder', 'path', 'to', 'file'];
+    const parts = EXAMPLE_PATHS.GENERIC;
     return `[${parts.slice(0, Math.min(depth, parts.length)).join('/')}]`;
   }
 }
