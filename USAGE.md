@@ -252,6 +252,146 @@ validate-commits:
     - node dist/pre-commit.js
 ```
 
+## CLI 명령어 상세
+
+### precommit check
+
+staged 파일들의 규칙 준수 여부를 검증합니다.
+
+```bash
+# 현재 staged 파일 검증
+npm run precommit check
+
+# 특정 파일로 dry-run 테스트
+npm run precommit check -- --files "src/core/config.ts,src/core/types.ts"
+```
+
+출력 예시:
+```
+📋 Validation Check (Dry Run)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Preset: folder-based
+Test files: 2
+Depth setting: 3
+✅ PASSED - All files are in the same folder
+📁 Common path: [src/core]
+📝 Commit prefix: [src/core]
+
+📄 Validated files:
+   - src/core/config.ts
+   - src/core/types.ts
+
+⚠️  This was a dry-run. No actual validation was performed on staged files.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### precommit status
+
+현재 설정 및 git 상태를 확인합니다.
+
+```bash
+npm run precommit status
+```
+
+### precommit config
+
+현재 적용 중인 설정을 JSON 형태로 출력합니다.
+
+```bash
+npm run precommit config
+```
+
+### precommit init
+
+기본 설정 파일(.precommitrc.json)을 생성합니다.
+
+```bash
+npm run precommit init
+```
+
+### precommit validate-config
+
+설정 파일의 유효성을 검증하고 잠재적 문제를 확인합니다.
+
+```bash
+npm run precommit validate-config
+```
+
+출력 예시:
+```
+🔍 Configuration Validation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Preset: folder-based
+Depth: 3
+Max Files: 100
+Language: en
+
+✅ Configuration is valid
+
+Warnings:
+⚠️  Consider adding 'node_modules' to ignorePaths
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### precommit logs
+
+로그 파일 통계를 확인합니다.
+
+```bash
+npm run precommit logs
+```
+
+### precommit cleanup
+
+로그 파일을 정리합니다.
+
+```bash
+# 오래된 로그 파일만 정리 (logMaxAgeHours 기준)
+npm run precommit cleanup
+
+# 모든 로그 파일 정리
+npm run precommit cleanup -- --all
+```
+
+### precommit stats
+
+커밋 히스토리의 prefix 통계를 분석합니다.
+
+```bash
+# 최근 20개 커밋 분석 (기본값)
+npm run precommit stats
+
+# 특정 개수의 커밋 분석
+npm run precommit stats -- --last 50
+```
+
+출력 예시:
+```
+📊 Commit Prefix Statistics (last 20 commits)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Prefix distribution:
+  [src/core            ]   5 (25.0%) ██
+  [src/cli/commands    ]   4 (20.0%) ██
+  [src/hooks           ]   3 (15.0%) █
+  [root                ]   3 (15.0%) █
+  [docs                ]   2 (10.0%) █
+  [tests/unit/core     ]   2 (10.0%) █
+  [config              ]   1 (5.0%)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Total analyzed: 20 commits
+With prefix: 20
+Without prefix: 0
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+```
+
+### precommit install
+
+Husky hooks를 설치합니다. (pre-commit, prepare-commit-msg, commit-msg, post-commit)
+
+```bash
+npm run precommit install
+```
+
 ## 문제 해결
 
 ### 1. 훅이 실행되지 않음

@@ -73,13 +73,15 @@ npm run prepare
 - Quick fix 명령어 제안
 
 ### 4. CLI 도구
-- `precommit check`: 커밋 전 검증
+- `precommit check`: 커밋 전 검증 (dry-run 지원)
 - `precommit status`: 현재 상태 확인
 - `precommit config`: 설정 확인
 - `precommit init`: 설정 파일 초기화
+- `precommit validate-config`: 설정 파일 검증
 - `precommit logs`: 로그 파일 통계
 - `precommit cleanup`: 로그 파일 정리
 - `precommit stats`: 커밋 prefix 통계 분석
+- `precommit install`: Husky hooks 설치
 
 ### 5. 통계 및 검증
 - 파일 통계 (총 파일, 필터링된 파일, 무시된 파일 등)
@@ -200,6 +202,12 @@ npm run precommit config
 npm run precommit init
 ```
 
+### 설정 검증
+```bash
+# 설정 파일 검증 및 문제 확인
+npm run precommit validate-config
+```
+
 ### 로그 관리
 ```bash
 # 로그 파일 상태 확인
@@ -302,7 +310,8 @@ git commit -m "Update files"
 │   │   ├── git-helper.ts        # Git 유틸리티
 │   │   └── utils/               # 유틸리티 함수
 │   │       ├── path-utils.ts    # 경로 조작
-│   │       └── validation-utils.ts # 검증 로직
+│   │       ├── validation-utils.ts # 검증 로직
+│   │       └── console.ts       # 콘솔 출력 유틸리티
 │   ├── presets/                 # 검증 프리셋
 │   │   ├── base/                # 베이스 인터페이스
 │   │   │   ├── types.ts         # Preset 인터페이스
@@ -315,7 +324,18 @@ git commit -m "Update files"
 │   │   ├── commit-msg.ts        # 메시지 검증
 │   │   └── post-commit.ts       # 로그 정리
 │   └── cli/                     # CLI 도구
-│       └── index.ts             # CLI 진입점
+│       ├── index.ts             # CLI 진입점
+│       └── commands/            # CLI 명령어
+│           ├── index.ts         # 명령어 export
+│           ├── check.ts         # check 명령어
+│           ├── status.ts        # status 명령어
+│           ├── config.ts        # config 명령어
+│           ├── init.ts          # init 명령어
+│           ├── validate-config.ts # validate-config 명령어
+│           ├── cleanup.ts       # cleanup 명령어
+│           ├── logs.ts          # logs 명령어
+│           ├── stats.ts         # stats 명령어
+│           └── install.ts       # install 명령어
 ├── .husky/                      # Husky hooks
 ├── dist/                        # 컴파일된 JS
 ├── docs/                        # 문서
