@@ -4,6 +4,13 @@
 
 import { simpleGit } from 'simple-git';
 import { CLI_DISPLAY } from '../../core/constants.js';
+import {
+  printHeader,
+  printFooter,
+  printSeparator,
+  printWarning,
+  printError,
+} from '../../core/utils/console.js';
 
 export async function statsCommand(): Promise<void> {
   try {
@@ -14,8 +21,7 @@ export async function statsCommand(): Promise<void> {
     const git = simpleGit();
     const log = await git.log({ maxCount: count });
 
-    console.log(`\n📊 Commit Prefix Statistics (last ${count} commits)\n`);
-    console.log('━'.repeat(60));
+    printHeader(`Commit Prefix Statistics (last ${count} commits)`, '📊');
 
     // Parse prefixes
     const prefixes: Record<string, number> = {};
@@ -35,26 +41,28 @@ export async function statsCommand(): Promise<void> {
     const sorted = Object.entries(prefixes).sort((a, b) => b[1] - a[1]);
 
     console.log('Prefix distribution:');
-    sorted.forEach(([prefix, count]) => {
-      const percentage = ((count / log.all.length) * 100).toFixed(1);
-      const bar = '█'.repeat(Math.floor(count / CLI_DISPLAY.BAR_SCALE_FACTOR));
-      console.log(`  [${prefix.padEnd(20)}] ${count.toString().padStart(3)} (${percentage}%) ${bar}`);
+    sorted.forEach(([prefix, prefixCount]) => {
+      const percentage = ((prefixCount / log.all.length) * 100).toFixed(1);
+      const bar = '█'.repeat(Math.floor(prefixCount / CLI_DISPLAY.BAR_SCALE_FACTOR));
+      console.log(`  [${prefix.padEnd(20)}] ${prefixCount.toString().padStart(3)} (${percentage}%) ${bar}`);
     });
 
     if (noPrefixCommits.length > 0) {
-      console.log(`\n⚠️  Commits without prefix: ${noPrefixCommits.length}`);
+      console.log('');
+      printWarning(`Commits without prefix: ${noPrefixCommits.length}`);
       if (noPrefixCommits.length <= CLI_DISPLAY.MAX_COMMITS_TO_SHOW) {
         noPrefixCommits.forEach(msg => console.log(`    - ${msg}`));
       }
     }
 
-    console.log('━'.repeat(60));
+    printSeparator();
     console.log(`Total analyzed: ${log.all.length} commits`);
     console.log(`With prefix: ${log.all.length - noPrefixCommits.length}`);
     console.log(`Without prefix: ${noPrefixCommits.length}`);
-    console.log('━'.repeat(60) + '\n');
+
+    printFooter();
   } catch (error) {
-    console.error('Error generating stats:', error);
+    printError(`Error generating stats: ${error}`);
     process.exit(1);
   }
 }

@@ -4,6 +4,11 @@
 
 import { loadConfig } from '../../core/config.js';
 import { Logger } from '../../core/logger.js';
+import {
+  printHeader,
+  printFooter,
+  printError,
+} from '../../core/utils/console.js';
 
 export function cleanupCommand(): void {
   try {
@@ -12,8 +17,7 @@ export function cleanupCommand(): void {
     const args = process.argv.slice(2);
     const cleanAll = args.includes('--all');
 
-    console.log('\n🗑️  Log Cleanup\n');
-    console.log('━'.repeat(60));
+    printHeader('Log Cleanup', '🗑️');
 
     let deletedCount: number;
     if (cleanAll) {
@@ -24,9 +28,9 @@ export function cleanupCommand(): void {
       console.log(`Cleaned up old log files (>${config.logMaxAgeHours}h): ${deletedCount} file(s) deleted`);
     }
 
-    console.log('━'.repeat(60) + '\n');
+    printFooter();
   } catch (error) {
-    console.error('Error during cleanup:', error);
+    printError(`Error during cleanup: ${error}`);
     process.exit(1);
   }
 }

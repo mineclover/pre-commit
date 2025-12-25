@@ -3,6 +3,7 @@
  */
 
 import { writeFileSync } from 'fs';
+import { printSuccess, printError } from '../../core/utils/console.js';
 
 export function initCommand(): void {
   const defaultConfig = {
@@ -20,10 +21,10 @@ export function initCommand(): void {
 
   try {
     writeFileSync('.precommitrc.json', JSON.stringify(defaultConfig, null, 2), 'utf-8');
-    console.log('✅ Created .precommitrc.json with default configuration');
+    printSuccess('Created .precommitrc.json with default configuration');
     console.log(JSON.stringify(defaultConfig, null, 2));
   } catch (error) {
-    console.error('Error creating config file:', error);
+    printError(`Error creating config file: ${error}`);
     process.exit(1);
   }
 }

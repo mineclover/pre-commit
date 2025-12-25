@@ -6,6 +6,14 @@ import { existsSync } from 'fs';
 import { loadConfig } from '../../core/config.js';
 import { CONFIG_FILE } from '../../core/constants.js';
 import { isGlobPattern } from '../../core/utils/glob.js';
+import {
+  printHeader,
+  printFooter,
+  printSuccess,
+  printWarning,
+  printInfo,
+  printError,
+} from '../../core/utils/console.js';
 import { getMessages, formatMessage } from '../../core/messages.js';
 import type { FolderBasedConfig } from '../../presets/folder-based/types.js';
 
@@ -18,12 +26,11 @@ export function validateConfigCommand(): void {
     // Use default messages
   }
 
-  console.log('\n🔍 Configuration Validation\n');
-  console.log('━'.repeat(60));
+  printHeader('Configuration Validation', '🔍');
 
   // Check if config file exists
   if (!existsSync(CONFIG_FILE)) {
-    console.log(`⚠️  ${formatMessage(messages.configNotFound, { file: CONFIG_FILE })}`);
+    printWarning(formatMessage(messages.configNotFound, { file: CONFIG_FILE }));
     console.log(`\n${messages.defaultConfig}:`);
     const defaultConfig = {
       preset: 'folder-based',
@@ -33,15 +40,15 @@ export function validateConfigCommand(): void {
       ignorePaths: ['package.json', 'package-lock.json', 'tsconfig.json', '.gitignore', 'README.md']
     };
     console.log(JSON.stringify(defaultConfig, null, 2));
-    console.log('━'.repeat(60));
-    console.log(`ℹ️  ${messages.runInit}`);
+    printFooter();
+    printInfo(messages.runInit);
     return;
   }
 
   try {
     const config = loadConfig();
     messages = getMessages(config.language);
-    console.log(`✅ ${messages.configValid}`);
+    printSuccess(messages.configValid);
     console.log('');
 
     const folderConfig = config as FolderBasedConfig;
@@ -81,12 +88,12 @@ export function validateConfigCommand(): void {
 
     if (missingPaths > 0) {
       console.log('');
-      console.log(`⚠️  ${formatMessage(messages.missingPathsWarning, { count: missingPaths })}`);
+      printWarning(formatMessage(messages.missingPathsWarning, { count: missingPaths }));
     }
 
-    console.log('━'.repeat(60) + '\n');
+    printFooter();
   } catch (error) {
-    console.error(`❌ ${messages.configError}: ${error}`);
+    printError(`${messages.configError}: ${error}`);
     process.exit(1);
   }
 }

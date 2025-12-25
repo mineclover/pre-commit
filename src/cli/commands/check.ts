@@ -6,6 +6,14 @@ import { simpleGit } from 'simple-git';
 import { loadConfig } from '../../core/config.js';
 import { CommitValidator } from '../../core/validator.js';
 import { matchAnyGlob } from '../../core/utils/glob.js';
+import {
+  printHeader,
+  printFooter,
+  printSuccess,
+  printError,
+  printWarning,
+  printListItem,
+} from '../../core/utils/console.js';
 import { getMessages } from '../../core/messages.js';
 import type { FolderBasedConfig } from '../../presets/folder-based/types.js';
 
@@ -45,7 +53,7 @@ export async function checkCommand(args: string[] = []): Promise<void> {
     }
 
     if (stagedFiles.length === 0) {
-      console.log(`ℹ️  ${messages.noFilesStaged}`);
+      printWarning(messages.noFilesStaged);
       return;
     }
 
@@ -53,25 +61,25 @@ export async function checkCommand(args: string[] = []): Promise<void> {
     const result = validator.validate(stagedFiles);
     const folderConfig = config as FolderBasedConfig;
 
-    console.log(`\n📋 ${isDryRun ? 'Validation Check (Dry Run)' : 'Validation Check'}\n`);
-    console.log('━'.repeat(60));
+    const title = isDryRun ? 'Validation Check (Dry Run)' : 'Validation Check';
+    printHeader(title, '📋');
+
     console.log(`Preset: ${config.preset}`);
     console.log(`${isDryRun ? messages.testFiles : 'Staged files'}: ${stagedFiles.length}`);
     if (config.preset === 'folder-based') {
       console.log(`${messages.depthSetting}: ${folderConfig.depth}`);
     }
-    console.log('━'.repeat(60));
 
     // Show ignored files if any
     const ignoredFiles = stagedFiles.filter(f => matchAnyGlob(f, folderConfig.ignorePaths || []));
     if (ignoredFiles.length > 0) {
       console.log(`\n📝 ${messages.ignoredFiles} (${ignoredFiles.length}):`);
-      ignoredFiles.forEach(f => console.log(`   - ${f}`));
+      ignoredFiles.forEach(f => printListItem(f, 3));
       console.log('');
     }
 
     if (result.valid) {
-      console.log(`✅ ${messages.checkPassed}`);
+      printSuccess(messages.checkPassed);
       if (result.commonPath !== undefined && result.commonPath !== null) {
         console.log(`📁 ${messages.commonPath}: [${result.commonPath || 'root'}]`);
         console.log(`📝 ${messages.commitPrefix}: ${validator.getCommitPrefix(result.commonPath || '')}`);
@@ -79,21 +87,22 @@ export async function checkCommand(args: string[] = []): Promise<void> {
       const validatedFiles = stagedFiles.filter(f => !ignoredFiles.includes(f));
       if (validatedFiles.length > 0) {
         console.log(`\n📄 ${messages.validatedFiles}:`);
-        validatedFiles.forEach(f => console.log(`   - ${f}`));
+        validatedFiles.forEach(f => printListItem(f, 3));
       }
     } else {
-      console.log(`❌ ${messages.checkFailed}\n`);
+      printError(messages.checkFailed);
+      console.log('');
       result.errors.forEach(err => console.log(err));
     }
 
     if (isDryRun) {
       console.log('');
-      console.log(`⚠️  ${messages.dryRunWarning}`);
+      printWarning(messages.dryRunWarning);
     }
 
-    console.log('━'.repeat(60) + '\n');
+    printFooter();
   } catch (error) {
-    console.error('Error:', error);
+    printError(`Error: ${error}`);
     process.exit(1);
   }
 }

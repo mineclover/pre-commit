@@ -3,15 +3,16 @@
  */
 
 import { loadConfig } from '../../core/config.js';
+import { printHeader, printFooter, printError } from '../../core/utils/console.js';
 
 export function configCommand(): void {
   try {
     const config = loadConfig();
-    console.log('\n⚙️  Current Configuration\n');
+    printHeader('Current Configuration', '⚙️');
     console.log(JSON.stringify(config, null, 2));
-    console.log('\n');
+    printFooter();
   } catch (error) {
-    console.error('Error loading config:', error);
+    printError(`Error loading config: ${error}`);
     process.exit(1);
   }
 }
