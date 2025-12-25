@@ -57,10 +57,10 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 npm install && npm run build
 
 # 2. Husky 훅 설치
-npx precommit install
+node dist/cli.js install
 
 # 3. 설정 파일 생성 (선택)
-npx precommit init
+node dist/cli.js init
 ```
 
 설치 완료! 이제 커밋 시 자동으로 폴더 규칙이 적용됩니다.
@@ -94,31 +94,29 @@ npx precommit init
 
 ## CLI 사용법
 
-모든 명령어는 `npx precommit` 또는 `npm run precommit`으로 실행합니다.
-
 ```bash
 # 기본 명령어
-npx precommit --version          # 버전 확인
-npx precommit help               # 도움말
+node dist/cli.js --version       # 버전 확인
+node dist/cli.js help            # 도움말
 
 # 검증
-npx precommit check              # staged 파일 검증
-npx precommit check --files "a.ts,b.ts"  # dry-run 테스트
-npx precommit validate-config    # 설정 파일 검증
+node dist/cli.js check           # staged 파일 검증
+node dist/cli.js check --files "a.ts,b.ts"  # dry-run 테스트
+node dist/cli.js validate-config # 설정 파일 검증
 
 # 상태
-npx precommit status             # 현재 상태 확인
-npx precommit config             # 설정 보기
-npx precommit stats              # 커밋 통계
+node dist/cli.js status          # 현재 상태 확인
+node dist/cli.js config          # 설정 보기
+node dist/cli.js stats           # 커밋 통계
 
 # 설정
-npx precommit init               # 설정 파일 생성
-npx precommit install            # Husky 훅 설치
+node dist/cli.js init            # 설정 파일 생성
+node dist/cli.js install         # Husky 훅 설치
 
 # 로그
-npx precommit logs               # 로그 상태
-npx precommit cleanup            # 오래된 로그 정리
-npx precommit cleanup --all      # 모든 로그 정리
+node dist/cli.js logs            # 로그 상태
+node dist/cli.js cleanup         # 오래된 로그 정리
+node dist/cli.js cleanup --all   # 모든 로그 정리
 ```
 
 ## 사용 예시
