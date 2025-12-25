@@ -7,7 +7,10 @@
  * It includes a template system for dynamic message formatting.
  */
 
-export type Language = 'en' | 'ko';
+import type { Language } from './types.js';
+
+// Re-export Language type for convenience
+export type { Language } from './types.js';
 
 /**
  * Message interface defining all user-facing strings
@@ -357,10 +360,10 @@ export function getMessages(lang: Language = 'en'): Messages {
  * formatMessage('DEPTH: {depth} levels', { depth: 3 });
  * // Returns: "DEPTH: 3 levels"
  */
-export function formatMessage(template: string, params: Record<string, any>): string {
+export function formatMessage(template: string, params: Record<string, string | number | boolean>): string {
   let result = template;
-  Object.entries(params).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(params)) {
     result = result.replace(`{${key}}`, String(value));
-  });
+  }
   return result;
 }

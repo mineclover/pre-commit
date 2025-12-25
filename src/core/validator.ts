@@ -1,5 +1,6 @@
 import type { Config } from './config.js';
-import type { ValidationResult, CommitMsgValidationResult } from '../presets/base/types.js';
+import type { ValidationResult, CommitMsgValidationResult, Preset } from '../presets/base/types.js';
+import type { BaseConfig } from './types.js';
 import { PresetRegistry } from '../presets/index.js';
 
 /**
@@ -26,8 +27,8 @@ import { PresetRegistry } from '../presets/index.js';
  * }
  */
 export class CommitValidator {
-  private config: Config;
-  private preset;
+  private readonly config: Config;
+  private readonly preset: Preset<BaseConfig>;
 
   constructor(config: Config) {
     this.config = config;

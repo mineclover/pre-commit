@@ -15,6 +15,7 @@ import {
   validateDepthOverrides,
 } from './utils/validation-utils.js';
 import { ConfigValidationError } from './errors.js';
+import { isFileNotFoundError } from './types.js';
 
 /**
  * Union type for all preset configs
@@ -73,8 +74,8 @@ export function loadConfig(): Config {
     const config = { ...DEFAULT_CONFIG, ...userConfig } as Config;
     validateConfig(config);
     return config;
-  } catch (error: any) {
-    if (error.code === 'ENOENT') {
+  } catch (error: unknown) {
+    if (isFileNotFoundError(error)) {
       return DEFAULT_CONFIG;
     }
     throw error;
