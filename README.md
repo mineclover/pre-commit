@@ -50,19 +50,24 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 - 설정 파일에서 `language` 옵션으로 변경
 - 템플릿 기반 메시지 시스템
 
-## 설치 및 설정
+## 빠른 시작
 
-### 1. 의존성 설치
 ```bash
-npm install
+# 1. 설치 및 빌드
+npm install && npm run build
+
+# 2. Husky 훅 설치
+npx precommit install
+
+# 3. 설정 파일 생성 (선택)
+npx precommit init
 ```
 
-### 2. 빌드
-```bash
-npm run build
-```
+설치 완료! 이제 커밋 시 자동으로 폴더 규칙이 적용됩니다.
 
-### 3. 설정 파일 (`.precommitrc.json`)
+## 설정
+
+### 설정 파일 (`.precommitrc.json`)
 ```json
 {
   "depth": 2,
@@ -89,73 +94,31 @@ npm run build
 
 ## CLI 사용법
 
-### 버전 확인
+모든 명령어는 `npx precommit` 또는 `npm run precommit`으로 실행합니다.
+
 ```bash
-node dist/cli.js --version
-# 또는
-node dist/cli.js -v
-```
+# 기본 명령어
+npx precommit --version          # 버전 확인
+npx precommit help               # 도움말
 
-### 커밋 전 검증
-```bash
-# 현재 staged 파일들이 규칙을 통과하는지 확인
-npm run precommit check
-# 또는
-node dist/cli.js check
+# 검증
+npx precommit check              # staged 파일 검증
+npx precommit check --files "a.ts,b.ts"  # dry-run 테스트
+npx precommit validate-config    # 설정 파일 검증
 
-# Dry-run: 특정 파일로 규칙 테스트
-node dist/cli.js check --files "src/a.ts,src/b.ts"
-```
+# 상태
+npx precommit status             # 현재 상태 확인
+npx precommit config             # 설정 보기
+npx precommit stats              # 커밋 통계
 
-### 설정 검증
-```bash
-# 설정 파일 유효성 검사 및 ignorePaths 확인
-node dist/cli.js validate-config
-```
+# 설정
+npx precommit init               # 설정 파일 생성
+npx precommit install            # Husky 훅 설치
 
-### 상태 확인
-```bash
-# 현재 설정과 git 상태 확인
-npm run precommit status
-```
-
-### 설정 확인
-```bash
-# 현재 설정 보기
-npm run precommit config
-```
-
-### 설정 초기화
-```bash
-# .precommitrc.json 파일 생성
-npm run precommit init
-```
-
-### Husky 훅 설치
-```bash
-# Husky 훅 설치 (pre-commit, prepare-commit-msg, post-commit)
-npm run precommit install
-```
-
-### 로그 관리
-```bash
-# 로그 파일 상태 확인
-npm run precommit logs
-
-# 오래된 로그 파일 정리 (24시간 이상)
-npm run precommit cleanup
-
-# 모든 로그 파일 정리
-npm run precommit cleanup -- --all
-```
-
-### 커밋 통계
-```bash
-# 최근 20개 커밋의 prefix 분포 확인 (기본값)
-npm run precommit stats
-
-# 특정 개수의 커밋 분석
-npm run precommit stats -- --last 50
+# 로그
+npx precommit logs               # 로그 상태
+npx precommit cleanup            # 오래된 로그 정리
+npx precommit cleanup --all      # 모든 로그 정리
 ```
 
 ## 사용 예시
