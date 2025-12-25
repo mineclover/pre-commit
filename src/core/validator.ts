@@ -1,7 +1,9 @@
 import type { Config } from './config.js';
-import type { ValidationResult, CommitMsgValidationResult, Preset } from '../presets/base/types.js';
+import type { ValidationResult, CommitMsgValidationResult, Preset, ValidationContext } from '../presets/base/types.js';
 import type { BaseConfig } from './types.js';
+import type { PipelineConfig, PipelineResult } from './pipeline/types.js';
 import { PresetRegistry } from '../presets/index.js';
+import { ValidationPipeline } from './pipeline/pipeline.js';
 
 /**
  * CommitValidator - Main validator class that delegates to preset implementations
@@ -183,5 +185,54 @@ export class CommitValidator {
    */
   getPresetDescription(): string {
     return this.preset.description;
+  }
+
+  /**
+   * Execute validation pipeline with multiple presets
+   *
+   * @param pipelineConfig - Pipeline configuration
+   * @param stagedFiles - Files to validate
+   * @param context - Optional validation context
+   * @returns Pipeline result with all stage results
+   *
+   * @example
+   * const result = await validator.validatePipeline(
+   *   {
+   *     strategy: 'sequential',
+   *     stages: [
+   *       { preset: 'folder-based' },
+   *       { preset: 'conventional-commits' }
+   *     ]
+   *   },
+   *   stagedFiles
+   * );
+   */
+  async validatePipeline(
+    pipelineConfig: PipelineConfig,
+    stagedFiles: string[],
+    context?: Partial<ValidationContext>
+  ): Promise<PipelineResult> {
+    const pipeline = new ValidationPipeline();
+
+    const fullContext: ValidationContext = {
+      stagedFiles,
+      ...context,
+    };
+
+    return pipeline.execute(pipelineConfig, this.config, fullContext);
+  }
+
+  /**
+   * Get the underlying preset instance
+   */
+  getPreset(): Preset<BaseConfig> {
+    return this.preset;
+  }
+
+  /**
+   * Get the current configuration
+   */
+  getConfig(): Config {
+    return this.config;
   }
 }
