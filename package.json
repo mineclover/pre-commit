@@ -1,14 +1,14 @@
 {
   "name": "pre-commit-folder-enforcer",
-  "version": "1.4.0",
+  "version": "1.5.0",
   "description": "Pre-commit hook enforcing folder-based commit rules with auto-prefix generation and extensible preset system",
   "type": "module",
-  "main": "dist/cli.js",
-  "types": "dist/cli.d.ts",
+  "main": "dist/cli/index.js",
+  "types": "dist/cli/index.d.ts",
   "scripts": {
     "build": "tsc",
     "prepare": "husky",
-    "precommit": "node dist/cli.js",
+    "precommit": "node dist/cli/index.js",
     "clean": "rm -rf dist",
     "rebuild": "npm run clean && npm run build",
     "test": "vitest",
@@ -16,7 +16,7 @@
     "test:coverage": "vitest --coverage"
   },
   "bin": {
-    "precommit": "./dist/cli.js"
+    "precommit": "./dist/cli/index.js"
   },
   "keywords": [
     "git",

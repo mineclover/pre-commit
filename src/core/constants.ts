@@ -68,4 +68,19 @@ export const EXAMPLE_PATHS = {
 export const CLI_DISPLAY = {
   MAX_COMMITS_TO_SHOW: 5,
   BAR_SCALE_FACTOR: 2,
+  SEPARATOR_WIDTH: 60,
+  SEPARATOR_CHAR: '━',
 } as const;
+
+// Husky hooks configuration
+export const HUSKY_DIR = '.husky';
+
+export const HOOKS = {
+  'pre-commit': 'node dist/hooks/pre-commit.js',
+  'prepare-commit-msg': 'node dist/hooks/prepare-commit-msg.js "$1" "$2" "$3"',
+  'commit-msg': 'node dist/hooks/commit-msg.js "$1"',
+  'post-commit': 'node dist/hooks/post-commit.js',
+} as const;
+
+// Config file
+export const CONFIG_FILE = '.precommitrc.json';
