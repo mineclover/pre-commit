@@ -20,6 +20,7 @@ Commands:
   logs            Show log statistics
   stats           Show commit history statistics
   install         Install husky hooks (pre-commit, prepare-commit-msg, commit-msg, post-commit)
+  plugin          Manage external plugins and presets
   help            Show this help message
 
 Examples:
@@ -35,6 +36,9 @@ Examples:
   precommit stats                          # Show commit prefix statistics
   precommit stats --last 50                # Show stats for last 50 commits
   precommit install                        # Install husky hooks
+  precommit plugin list                    # List registered presets
+  precommit plugin discover                # Discover installed plugins
+  precommit plugin load ./my-preset        # Load external preset
   precommit --version                      # Show version
 `);
 }

@@ -13,4 +13,5 @@ export { cleanupCommand } from './cleanup.js';
 export { logsCommand } from './logs.js';
 export { statsCommand } from './stats.js';
 export { installCommand } from './install.js';
+export { pluginCommand } from './plugin.js';
 export type { CliOptions } from './types.js';
