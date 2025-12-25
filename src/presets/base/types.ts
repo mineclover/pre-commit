@@ -49,31 +49,77 @@ export interface CommitMsgValidationResult {
 }
 
 /**
+ * Validation context passed to presets
+ */
+export interface ValidationContext {
+  /** Staged files for this validation */
+  stagedFiles: string[];
+  /** Commit message (if available) */
+  commitMessage?: string;
+  /** Previous validation results (for pipeline) */
+  previousResults?: ValidationResult[];
+  /** Current git branch */
+  branch?: string;
+  /** Environment variables */
+  env?: Record<string, string>;
+}
+
+/**
+ * Preset lifecycle hooks (all optional)
+ */
+export interface PresetLifecycle {
+  /** Called when preset is registered */
+  onRegister?(): void | Promise<void>;
+  /** Called before validation begins */
+  onBeforeValidate?(context: ValidationContext): void | Promise<void>;
+  /** Called after validation completes */
+  onAfterValidate?(result: ValidationResult): void | Promise<void>;
+  /** Called when preset is unloaded */
+  onUnload?(): void | Promise<void>;
+}
+
+/**
  * Base interface that all presets must implement
  * @template TConfig - The configuration type for this preset (must extend BaseConfig)
  */
-export interface Preset<TConfig extends BaseConfig = BaseConfig> {
+export interface Preset<TConfig extends BaseConfig = BaseConfig> extends PresetLifecycle {
   /** Preset identifier name */
   readonly name: string;
 
   /** Human-readable preset description */
   readonly description: string;
 
+  /** Preset version (optional) */
+  readonly version?: string;
+
+  /** JSON Schema for config validation (optional) */
+  readonly configSchema?: object;
+
   /**
    * Validate staged files according to preset rules
    * @param stagedFiles - Array of file paths to validate
    * @param config - Preset configuration
-   * @returns Validation result
+   * @param context - Optional validation context
+   * @returns Validation result (sync or async)
    */
-  validateFiles(stagedFiles: string[], config: TConfig): ValidationResult;
+  validateFiles(
+    stagedFiles: string[],
+    config: TConfig,
+    context?: ValidationContext
+  ): ValidationResult | Promise<ValidationResult>;
 
   /**
    * Validate commit message according to preset rules
    * @param commitMsg - Commit message to validate
    * @param config - Preset configuration
-   * @returns Validation result
+   * @param context - Optional validation context
+   * @returns Validation result (sync or async)
    */
-  validateCommitMessage(commitMsg: string, config: TConfig): CommitMsgValidationResult;
+  validateCommitMessage(
+    commitMsg: string,
+    config: TConfig,
+    context?: ValidationContext
+  ): CommitMsgValidationResult | Promise<CommitMsgValidationResult>;
 
   /**
    * Generate commit message prefix from validation result
@@ -82,4 +128,11 @@ export interface Preset<TConfig extends BaseConfig = BaseConfig> {
    * @returns Formatted prefix string
    */
   getCommitPrefix(validationResult: ValidationResult, config: TConfig): string;
+
+  /**
+   * Optional: Transform config before use
+   * @param config - Original config
+   * @returns Transformed config
+   */
+  transformConfig?(config: TConfig): TConfig | Promise<TConfig>;
 }
