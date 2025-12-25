@@ -1,12 +1,21 @@
+import type { Language } from './messages.js';
+
 export interface Config {
   depth: number;
   logFile: string;
   enabled: boolean;
   ignorePaths: string[];
-  maxFiles?: number; // Optional: max files per commit
-  verbose?: boolean; // Optional: verbose output
-  logMaxAgeHours?: number; // Optional: max age for log files in hours (for manual cleanup)
-  language?: 'en' | 'ko'; // Optional: message language (default: 'en')
+  maxFiles?: number;
+  verbose?: boolean;
+  logMaxAgeHours?: number;
+  language?: Language;
+}
+
+export interface ValidationStats {
+  totalFiles: number;
+  filteredFiles: number;
+  ignoredFiles: number;
+  uniqueFolders: number;
 }
 
 export interface ValidationResult {
@@ -14,11 +23,6 @@ export interface ValidationResult {
   commonPath: string | null;
   files: string[];
   errors: string[];
-  warnings?: string[];
-  stats?: {
-    totalFiles: number;
-    filteredFiles: number;
-    ignoredFiles: number;
-    uniqueFolders: number;
-  };
+  warnings: string[];
+  stats: ValidationStats;
 }

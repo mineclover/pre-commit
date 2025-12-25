@@ -1,27 +1,36 @@
 #!/usr/bin/env node
-import { readFileSync, writeFileSync } from 'fs';
 import { loadConfig } from './config.js';
 import { CommitValidator } from './validator.js';
 import { Logger } from './logger.js';
 import { getStagedFiles } from './git-helper.js';
-import { getMessages, formatMessage, type Language } from './messages.js';
+import { getMessages, formatMessage } from './messages.js';
+import { SEPARATOR_WIDTH, SEPARATOR_CHAR } from './constants.js';
+import { setVerbose, printVerbose } from './utils/console.js';
+import { handleFatalError } from './utils/error.js';
 
 async function main() {
   try {
     const config = loadConfig();
 
+    // Set verbose mode
+    setVerbose(config.verbose ?? false);
+    printVerbose(`Config loaded: depth=${config.depth}, enabled=${config.enabled}`);
+
     if (!config.enabled) {
+      printVerbose('Hook disabled, exiting');
       process.exit(0);
     }
 
-    const messages = getMessages(config.language as Language);
+    const messages = getMessages(config.language);
     const logger = new Logger(config.logFile, config.logMaxAgeHours);
 
     // Clear any previous log file (from previous failed commits)
     logger.clear();
+    printVerbose('Previous log files cleared');
 
     // Get staged files
     const stagedFiles = await getStagedFiles();
+    printVerbose(`Found ${stagedFiles.length} staged files`);
 
     if (stagedFiles.length === 0) {
       console.log(`⚠️  ${messages.noFilesStaged}`);
@@ -34,46 +43,25 @@ async function main() {
 
     if (!result.valid) {
       console.error(`\n❌ ${messages.commitBlocked}\n`);
-      console.error('━'.repeat(60));
+      console.error(SEPARATOR_CHAR.repeat(SEPARATOR_WIDTH));
       result.errors.forEach(err => console.error(err));
-      console.error('━'.repeat(60));
+      console.error(SEPARATOR_CHAR.repeat(SEPARATOR_WIDTH));
       console.error(`\n💡 ${messages.aiSummary}`);
       console.error(`   - ${formatMessage(messages.stagedFiles, { count: stagedFiles.length })}`);
       console.error(`   - ${formatMessage(messages.requiredDepth, { depth: config.depth })}`);
-      console.error(`   - ${formatMessage(messages.multipleFoldersDetected, { count: result.stats?.uniqueFolders || 0 })}`);
+      console.error(`   - ${formatMessage(messages.multipleFoldersDetected, { count: result.stats.uniqueFolders })}`);
       console.error(`   - ${messages.actionRequired}\n`);
 
       logger.logViolation(stagedFiles, result.errors);
       process.exit(1);
     }
 
-    // Add prefix to commit message if common path exists
-    if (result.commonPath !== null) {
-      const allFilesIgnored = result.stats?.ignoredFiles === stagedFiles.length;
-      const prefix = validator.getCommitPrefix(result.commonPath, allFilesIgnored);
-      const commitMsgFile = process.argv[2] || '.git/COMMIT_EDITMSG';
-
-      try {
-        let commitMsg = readFileSync(commitMsgFile, 'utf-8').trim();
-
-        // Don't add prefix if already present
-        if (!commitMsg.startsWith('[')) {
-          commitMsg = `${prefix} ${commitMsg}`;
-          writeFileSync(commitMsgFile, commitMsg, 'utf-8');
-          console.log(`✅ Commit prefix added: ${prefix}`);
-        }
-      } catch (err) {
-        // COMMIT_EDITMSG not available yet (pre-commit stage)
-        // This is fine, we'll handle it in prepare-commit-msg hook if needed
-      }
-    }
-
+    // Prefix is added by prepare-commit-msg hook
     const displayPath = result.commonPath || 'root';
     console.log(`✅ ${messages.validationPassed}: ${stagedFiles.length} files in [${displayPath}]`);
     process.exit(0);
-  } catch (error) {
-    console.error('❌ Pre-commit hook error:', error);
-    process.exit(1);
+  } catch (error: unknown) {
+    handleFatalError(error, 'Pre-commit hook error');
   }
 }
 

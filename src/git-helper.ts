@@ -1,34 +1,46 @@
 import { simpleGit, SimpleGit } from 'simple-git';
 
 /**
- * Get staged files with duplicates removed
+ * Normalize file path to use forward slashes (cross-platform)
+ * Converts Windows backslashes to forward slashes
+ * @param filePath - The file path to normalize
+ * @returns Normalized path with forward slashes
+ */
+export function normalizePath(filePath: string): string {
+  return filePath.replace(/\\/g, '/');
+}
+
+/**
+ * Get staged files with duplicates removed (cross-platform)
+ * Includes staged, created, and renamed files
+ * @param git - SimpleGit instance (optional, creates new one if not provided)
+ * @returns Array of normalized file paths
  */
 export async function getStagedFiles(git: SimpleGit = simpleGit()): Promise<string[]> {
   const status = await git.status();
-  return Array.from(new Set([
+  const files = Array.from(new Set([
     ...status.staged,
     ...status.created,
     ...status.renamed.map(r => r.to)
   ]));
+  // Normalize paths for cross-platform compatibility
+  return files.map(normalizePath);
 }
 
 /**
- * Get path depth (number of directory levels)
- * Examples:
- *   "file.ts" -> 0
- *   "src/file.ts" -> 1
- *   "src/components/Button.tsx" -> 2
+ * Check if commit message already has a prefix like [folder]
+ * @param message - The commit message to check
+ * @returns true if message starts with [prefix] format
  */
-export function getPathDepth(filePath: string): number {
-  const parts = filePath.split('/');
-  // If last part is a file, depth is parts.length - 1
-  return Math.max(0, parts.length - 1);
+export function hasCommitPrefix(message: string): boolean {
+  return /^\[[^\]]+\]\s/.test(message);
 }
 
 /**
- * Get minimum depth among files
+ * Check if this is a merge commit message
+ * @param message - The commit message to check
+ * @returns true if message starts with "Merge "
  */
-export function getMinDepth(files: string[]): number {
-  if (files.length === 0) return 0;
-  return Math.min(...files.map(getPathDepth));
+export function isMergeCommit(message: string): boolean {
+  return message.startsWith('Merge ');
 }

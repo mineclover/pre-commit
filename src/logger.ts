@@ -1,10 +1,19 @@
-import { mkdirSync, appendFileSync, existsSync, unlinkSync, statSync, readdirSync, renameSync } from 'fs';
-import { dirname, join, basename } from 'path';
+import { mkdirSync, appendFileSync, existsSync, unlinkSync, statSync, readdirSync } from 'fs';
+import { dirname, join } from 'path';
 
+/**
+ * Logger for commit violations and debug information
+ * Handles log file creation and cleanup
+ */
 export class Logger {
   private logPath: string;
   private maxAgeHours: number;
 
+  /**
+   * Create a new Logger instance
+   * @param logPath - Path to the log file
+   * @param maxAgeHours - Maximum age of log files in hours before cleanup
+   */
   constructor(logPath: string, maxAgeHours: number = 24) {
     this.logPath = logPath;
     this.maxAgeHours = maxAgeHours;
@@ -18,12 +27,19 @@ export class Logger {
     }
   }
 
+  /**
+   * Append a timestamped message to the log file
+   * @param message - Message to log
+   */
   log(message: string): void {
     const timestamp = new Date().toISOString();
     const logEntry = `[${timestamp}] ${message}\n`;
     appendFileSync(this.logPath, logEntry, 'utf-8');
   }
 
+  /**
+   * Delete the current log file
+   */
   clear(): void {
     if (existsSync(this.logPath)) {
       unlinkSync(this.logPath);
@@ -31,28 +47,8 @@ export class Logger {
   }
 
   /**
-   * Archive current log file with timestamp
-   */
-  archive(): void {
-    if (!existsSync(this.logPath)) {
-      return;
-    }
-
-    const dir = dirname(this.logPath);
-    const filename = basename(this.logPath);
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const archivePath = join(dir, `${filename}.${timestamp}.archive`);
-
-    try {
-      renameSync(this.logPath, archivePath);
-    } catch (error) {
-      // If archive fails, just delete the log
-      this.clear();
-    }
-  }
-
-  /**
    * Clean up old log files (older than maxAgeHours)
+   * @returns Number of deleted files
    */
   cleanupOldLogs(): number {
     const dir = dirname(this.logPath);
@@ -78,12 +74,12 @@ export class Logger {
               unlinkSync(filePath);
               deletedCount++;
             }
-          } catch (err) {
+          } catch {
             // Ignore errors for individual files
           }
         }
       });
-    } catch (err) {
+    } catch {
       // Ignore errors reading directory
     }
 
@@ -92,6 +88,7 @@ export class Logger {
 
   /**
    * Clean all logs in the directory
+   * @returns Number of deleted files
    */
   cleanupAll(): number {
     const dir = dirname(this.logPath);
@@ -110,18 +107,23 @@ export class Logger {
           try {
             unlinkSync(filePath);
             deletedCount++;
-          } catch (err) {
+          } catch {
             // Ignore errors for individual files
           }
         }
       });
-    } catch (err) {
+    } catch {
       // Ignore errors reading directory
     }
 
     return deletedCount;
   }
 
+  /**
+   * Log a commit violation with staged files and errors
+   * @param files - List of staged files
+   * @param errors - List of validation errors
+   */
   logViolation(files: string[], errors: string[]): void {
     this.log('=== COMMIT VIOLATION ===');
     this.log(`Staged files: ${files.join(', ')}`);
@@ -132,7 +134,7 @@ export class Logger {
   /**
    * Get log file statistics
    */
-  getStats(): { exists: boolean; size?: number; age?: number; modified?: Date } {
+  getStats(): LogStats {
     if (!existsSync(this.logPath)) {
       return { exists: false };
     }
@@ -150,3 +152,8 @@ export class Logger {
     }
   }
 }
+
+/** Discriminated union for log stats */
+export type LogStats =
+  | { exists: false }
+  | { exists: true; size: number; age: number; modified: Date };

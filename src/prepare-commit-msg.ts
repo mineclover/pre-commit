@@ -2,7 +2,7 @@
 import { readFileSync, writeFileSync } from 'fs';
 import { loadConfig } from './config.js';
 import { CommitValidator } from './validator.js';
-import { getStagedFiles } from './git-helper.js';
+import { getStagedFiles, hasCommitPrefix, isMergeCommit } from './git-helper.js';
 
 async function main() {
   try {
@@ -29,21 +29,20 @@ async function main() {
     const result = validator.validate(stagedFiles);
 
     if (result.valid && result.commonPath !== null) {
-      const allFilesIgnored = result.stats?.ignoredFiles === stagedFiles.length;
+      const allFilesIgnored = result.stats.ignoredFiles === stagedFiles.length;
       const prefix = validator.getCommitPrefix(result.commonPath, allFilesIgnored);
       let commitMsg = readFileSync(commitMsgFile, 'utf-8');
 
-      // Check if it's a template or empty commit
       const lines = commitMsg.split('\n');
       const firstLine = lines[0].trim();
 
       // Don't add prefix if:
-      // - Already has a prefix
+      // - Already has a prefix (matches [prefix] format)
       // - Is a merge commit
       // - Is empty (will use editor)
       if (
-        !firstLine.startsWith('[') &&
-        !firstLine.startsWith('Merge') &&
+        !hasCommitPrefix(firstLine) &&
+        !isMergeCommit(firstLine) &&
         firstLine.length > 0
       ) {
         lines[0] = `${prefix} ${firstLine}`;
@@ -53,9 +52,9 @@ async function main() {
     }
 
     process.exit(0);
-  } catch (error) {
+  } catch {
     // Don't block commit on error in this hook
-    console.error('⚠️  Warning in prepare-commit-msg:', error);
+    // Silently exit to avoid disrupting the commit flow
     process.exit(0);
   }
 }
