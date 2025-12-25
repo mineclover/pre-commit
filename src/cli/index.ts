@@ -32,6 +32,7 @@ import {
   logsCommand,
   statsCommand,
   installCommand,
+  pluginCommand,
   type CliOptions
 } from './commands/index.js';
 
@@ -80,6 +81,9 @@ async function main(): Promise<void> {
       break;
     case 'install':
       installCommand();
+      break;
+    case 'plugin':
+      await pluginCommand(args);
       break;
     case 'help':
     default:
