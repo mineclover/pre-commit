@@ -12,22 +12,21 @@ git commit -m "test"
 
 #### 원인 및 해결
 
-**A. Husky가 설치되지 않음**
+**A. Husky 훅이 설치되지 않음**
 ```bash
 # 확인
 ls -la .husky/
 
-# 해결
-npm install
-npx husky init
+# 해결: install 명령어 사용
+npm run precommit install
 ```
 
 **B. 훅 파일에 실행 권한 없음**
 ```bash
-# 확인
-ls -la .husky/pre-commit .husky/prepare-commit-msg .husky/post-commit
+# 해결 방법 1: install 명령어로 재설치 (권장)
+npm run precommit install
 
-# 해결
+# 해결 방법 2: 수동으로 권한 부여
 chmod +x .husky/pre-commit
 chmod +x .husky/prepare-commit-msg
 chmod +x .husky/post-commit
@@ -78,9 +77,8 @@ npm run build
 cat .husky/prepare-commit-msg
 # "node dist/prepare-commit-msg.js" 내용 확인
 
-# 해결
-echo 'node dist/prepare-commit-msg.js "$1" "$2" "$3"' > .husky/prepare-commit-msg
-chmod +x .husky/prepare-commit-msg
+# 해결: install 명령어로 재설치
+npm run precommit install
 ```
 
 ### 3. 커밋이 예상치 않게 차단됨
@@ -168,9 +166,8 @@ ls .commit-logs/
 # 확인
 cat .husky/post-commit
 
-# 해결
-echo 'node dist/post-commit.js' > .husky/post-commit
-chmod +x .husky/post-commit
+# 해결: install 명령어로 재설치
+npm run precommit install
 ```
 
 **B. 수동 정리**

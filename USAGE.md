@@ -15,11 +15,14 @@ npm run build
 #### 옵션 B: 기존 프로젝트에 통합
 ```bash
 # 필요한 파일들 복사
-cp -r /path/to/pre-commit/{package.json,tsconfig.json,.precommitrc.json,src,.husky} /your/project/
+cp -r /path/to/pre-commit/{package.json,tsconfig.json,.precommitrc.json,src} /your/project/
 
 cd /your/project
 npm install
 npm run build
+
+# Husky 훅 설치
+npm run precommit install
 ```
 
 #### 옵션 C: npm package (향후 지원 예정)
@@ -152,15 +155,13 @@ validate-commits:
 
 ### 1. 훅이 실행되지 않음
 ```bash
-# 훅 파일 권한 확인
+# 방법 1: 권한 수동 설정
 chmod +x .husky/pre-commit
 chmod +x .husky/prepare-commit-msg
 chmod +x .husky/post-commit
 
-# Husky 재설치
-rm -rf .husky
-npx husky init
-npm run build
+# 방법 2: install 명령어로 재설치
+npm run precommit install
 ```
 
 ### 2. 일시적으로 훅 비활성화

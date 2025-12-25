@@ -311,11 +311,9 @@ git commit -m "Update documentation"
 
 ### prefix가 추가되지 않는 경우
 
-1. **prepare-commit-msg 훅 확인**
+1. **Husky 훅 재설치**
    ```bash
-   ls -la .husky/prepare-commit-msg
-   # 실행 권한이 있는지 확인
-   chmod +x .husky/prepare-commit-msg
+   npm run precommit install
    ```
 
 2. **빌드 확인**

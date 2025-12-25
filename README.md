@@ -22,10 +22,14 @@ TypeScript 기반의 폴더 단위 커밋 규칙을 강제하는 Git pre-commit 
 - Quick fix 명령어 제안
 
 ### 4. CLI 도구
+- `precommit --version`: 버전 정보 출력
 - `precommit check`: 커밋 전 검증
+- `precommit check --files "a.ts,b.ts"`: Dry-run 검증
+- `precommit validate-config`: 설정 파일 유효성 검사
 - `precommit status`: 현재 상태 확인
 - `precommit config`: 설정 확인
 - `precommit init`: 설정 파일 초기화
+- `precommit install`: Husky 훅 설치
 - `precommit logs`: 로그 파일 통계
 - `precommit cleanup`: 로그 파일 정리
 - `precommit stats`: 커밋 prefix 통계 분석
@@ -78,12 +82,19 @@ npm run build
 - `depth`: 폴더 경로의 깊이 (기본값: 2, 범위: 1-10)
 - `logFile`: 위반 로그 파일 경로
 - `enabled`: 훅 활성화 여부
-- `ignorePaths`: 규칙을 적용하지 않을 파일/폴더 목록
+- `ignorePaths`: 규칙을 적용하지 않을 파일/폴더 목록 (glob 패턴 지원: `*.json`, `**/*.md`, `docs/**`)
 - `maxFiles`: 커밋당 최대 파일 수 (선택, 기본값: 100)
 - `verbose`: 상세 출력 모드 (선택, 기본값: false)
 - `language`: 메시지 언어 'en' | 'ko' (선택, 기본값: 'en')
 
 ## CLI 사용법
+
+### 버전 확인
+```bash
+node dist/cli.js --version
+# 또는
+node dist/cli.js -v
+```
 
 ### 커밋 전 검증
 ```bash
@@ -91,6 +102,15 @@ npm run build
 npm run precommit check
 # 또는
 node dist/cli.js check
+
+# Dry-run: 특정 파일로 규칙 테스트
+node dist/cli.js check --files "src/a.ts,src/b.ts"
+```
+
+### 설정 검증
+```bash
+# 설정 파일 유효성 검사 및 ignorePaths 확인
+node dist/cli.js validate-config
 ```
 
 ### 상태 확인
@@ -109,6 +129,12 @@ npm run precommit config
 ```bash
 # .precommitrc.json 파일 생성
 npm run precommit init
+```
+
+### Husky 훅 설치
+```bash
+# Husky 훅 설치 (pre-commit, prepare-commit-msg, post-commit)
+npm run precommit install
 ```
 
 ### 로그 관리
@@ -187,10 +213,31 @@ git commit -m "Update files"
 ```
 .
 ├── src/
+│   ├── commands/             # CLI 명령어 모듈
+│   │   ├── index.ts          # 명령어 내보내기
+│   │   ├── check.ts          # check 명령어
+│   │   ├── status.ts         # status 명령어
+│   │   ├── config.ts         # config 명령어
+│   │   ├── init.ts           # init 명령어
+│   │   ├── cleanup.ts        # cleanup 명령어
+│   │   ├── logs.ts           # logs 명령어
+│   │   ├── stats.ts          # stats 명령어
+│   │   ├── install.ts        # install 명령어
+│   │   ├── validate-config.ts # validate-config 명령어
+│   │   └── help.ts           # help 명령어
+│   ├── utils/                # 유틸리티 모듈
+│   │   ├── console.ts        # 콘솔 출력 유틸리티
+│   │   ├── error.ts          # 에러 처리 유틸리티
+│   │   ├── glob.ts           # Glob 패턴 매칭
+│   │   └── version.ts        # 버전 유틸리티
 │   ├── types.ts              # TypeScript 타입 정의
+│   ├── constants.ts          # 공용 상수
 │   ├── config.ts             # 설정 로더
 │   ├── logger.ts             # 로깅 시스템
 │   ├── validator.ts          # 커밋 검증 로직
+│   ├── messages.ts           # 다국어 메시지 템플릿
+│   ├── git-helper.ts         # Git 유틸리티 함수
+│   ├── cli.ts                # CLI 라우터
 │   ├── pre-commit.ts         # Pre-commit hook
 │   ├── prepare-commit-msg.ts # Prepare-commit-msg hook
 │   └── post-commit.ts        # Post-commit hook
@@ -221,6 +268,17 @@ git commit -m "Test message"
     npm run build
     node dist/pre-commit.js
 ```
+
+## 문서
+
+| 문서 | 설명 |
+|------|------|
+| [FEATURES.md](docs/FEATURES.md) | 전체 기능 문서 |
+| [CONVENTIONS.md](docs/CONVENTIONS.md) | 코드 컨벤션 |
+| [ADVANCED.md](docs/ADVANCED.md) | 고급 사용 가이드 |
+| [TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) | 문제 해결 가이드 |
+| [USAGE.md](USAGE.md) | 사용 가이드 |
+| [CHANGELOG.md](CHANGELOG.md) | 변경 이력 |
 
 ## 라이센스
 
