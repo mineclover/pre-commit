@@ -102,3 +102,48 @@ export class PresetNotFoundError extends PrecommitError {
     Object.setPrototypeOf(this, PresetNotFoundError.prototype);
   }
 }
+
+/**
+ * Plugin resolution error - thrown when a plugin cannot be found
+ */
+export class PluginResolveError extends PrecommitError {
+  constructor(
+    message: string,
+    public specifier: string,
+    public originalError?: Error
+  ) {
+    super(message);
+    this.name = 'PluginResolveError';
+    Object.setPrototypeOf(this, PluginResolveError.prototype);
+  }
+}
+
+/**
+ * Plugin load error - thrown when a plugin cannot be loaded
+ */
+export class PluginLoadError extends PrecommitError {
+  constructor(
+    message: string,
+    public specifier: string,
+    public originalError?: Error
+  ) {
+    super(message);
+    this.name = 'PluginLoadError';
+    Object.setPrototypeOf(this, PluginLoadError.prototype);
+  }
+}
+
+/**
+ * Plugin validation error - thrown when a plugin doesn't conform to interface
+ */
+export class PluginValidationError extends PrecommitError {
+  constructor(
+    message: string,
+    public pluginName?: string,
+    public missingMembers?: string[]
+  ) {
+    super(message);
+    this.name = 'PluginValidationError';
+    Object.setPrototypeOf(this, PluginValidationError.prototype);
+  }
+}

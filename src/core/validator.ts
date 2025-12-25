@@ -55,6 +55,19 @@ export class CommitValidator {
    * }
    */
   validate(stagedFiles: string[]): ValidationResult {
+    // Current builtin presets are synchronous, so we can safely cast
+    // When async presets are used, validateAsync() should be called instead
+    const result = this.preset.validateFiles(stagedFiles, this.config);
+    if (result instanceof Promise) {
+      throw new Error('Async preset detected. Use validateAsync() instead.');
+    }
+    return result;
+  }
+
+  /**
+   * Async version of validate for presets that return Promises
+   */
+  async validateAsync(stagedFiles: string[]): Promise<ValidationResult> {
     return this.preset.validateFiles(stagedFiles, this.config);
   }
 
@@ -78,6 +91,19 @@ export class CommitValidator {
    * }
    */
   validateCommitMessage(commitMsg: string): CommitMsgValidationResult {
+    // Current builtin presets are synchronous, so we can safely cast
+    // When async presets are used, validateCommitMessageAsync() should be called instead
+    const result = this.preset.validateCommitMessage(commitMsg, this.config);
+    if (result instanceof Promise) {
+      throw new Error('Async preset detected. Use validateCommitMessageAsync() instead.');
+    }
+    return result;
+  }
+
+  /**
+   * Async version of validateCommitMessage for presets that return Promises
+   */
+  async validateCommitMessageAsync(commitMsg: string): Promise<CommitMsgValidationResult> {
     return this.preset.validateCommitMessage(commitMsg, this.config);
   }
 
