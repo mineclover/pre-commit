@@ -1,28 +1,27 @@
 #!/usr/bin/env node
-import { loadConfig } from '../core/config.js';
+/**
+ * Post-commit hook - cleans up log files after successful commit
+ */
+
 import { Logger } from '../core/logger.js';
+import { initHook, handleHookError, exitSuccess } from './utils.js';
 
 async function main() {
   try {
-    const config = loadConfig();
+    const ctx = initHook();
+    if (!ctx) exitSuccess();
 
-    if (!config.enabled) {
-      process.exit(0);
-    }
+    const { config } = ctx;
 
     // Clear all log files on successful commit
     const logger = new Logger(config.logFile, config.logMaxAgeHours);
-
-    // Clean up all logs (including any archives if they exist)
-    const deletedCount = logger.cleanupAll();
+    logger.cleanupAll();
 
     console.log('✅ Commit successful - logs cleared');
-
-    process.exit(0);
+    exitSuccess();
   } catch (error) {
     // Don't block on error in post-commit
-    console.error('⚠️  Warning in post-commit:', error);
-    process.exit(0);
+    handleHookError('post-commit', error, false);
   }
 }
 

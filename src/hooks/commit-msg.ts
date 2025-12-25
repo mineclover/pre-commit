@@ -1,26 +1,27 @@
 #!/usr/bin/env node
+/**
+ * Commit-msg hook - validates commit message format
+ */
+
 import { readFileSync } from 'fs';
-import { loadConfig } from '../core/config.js';
 import { CommitValidator } from '../core/validator.js';
 import { getMessages, type Language } from '../core/messages.js';
 import { SPECIAL_COMMIT_TYPES } from '../core/constants.js';
+import { initHook, handleHookError, exitSuccess, exitFailure } from './utils.js';
 
 async function main() {
   try {
-    const config = loadConfig();
+    const ctx = initHook();
+    if (!ctx) exitSuccess();
 
-    // Skip validation if hook is disabled
-    if (!config.enabled) {
-      process.exit(0);
-    }
-
+    const { config } = ctx;
     const messages = getMessages(config.language as Language);
 
     // Get commit message file path from arguments
     const commitMsgFile = process.argv[2];
     if (!commitMsgFile) {
       console.error('❌ Error: Commit message file path not provided');
-      process.exit(1);
+      exitFailure();
     }
 
     // Read commit message
@@ -29,7 +30,7 @@ async function main() {
       commitMsg = readFileSync(commitMsgFile, 'utf-8');
     } catch (error) {
       console.error(`❌ Error reading commit message file: ${commitMsgFile}`);
-      process.exit(1);
+      exitFailure();
     }
 
     // Skip validation for merge commits, revert commits, etc.
@@ -38,7 +39,7 @@ async function main() {
 
     if (isSpecialCommit) {
       console.log('✅ Special commit type detected, skipping validation');
-      process.exit(0);
+      exitSuccess();
     }
 
     // Validate commit message using preset
@@ -53,14 +54,13 @@ async function main() {
       console.error(`\n📝 Your commit message:\n   "${commitMsg.trim()}"\n`);
       console.error(`\n📋 Current preset: ${validator.getPresetName()}`);
       console.error(`   ${validator.getPresetDescription()}\n`);
-      process.exit(1);
+      exitFailure();
     }
 
     console.log(`✅ Commit message format valid`);
-    process.exit(0);
+    exitSuccess();
   } catch (error) {
-    console.error('❌ Commit-msg hook error:', error);
-    process.exit(1);
+    handleHookError('commit-msg', error, true);
   }
 }
 

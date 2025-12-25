@@ -1,27 +1,30 @@
 #!/usr/bin/env node
+/**
+ * Prepare-commit-msg hook - adds commit prefix based on staged files
+ */
+
 import { readFileSync, writeFileSync } from 'fs';
-import { loadConfig } from '../core/config.js';
 import { CommitValidator } from '../core/validator.js';
 import { getStagedFiles } from '../core/git-helper.js';
+import { initHook, handleHookError, exitSuccess } from './utils.js';
 
 async function main() {
   try {
-    const config = loadConfig();
+    const ctx = initHook();
+    if (!ctx) exitSuccess();
 
-    if (!config.enabled) {
-      process.exit(0);
-    }
-
+    const { config } = ctx;
     const commitMsgFile = process.argv[2];
+
     if (!commitMsgFile) {
-      process.exit(0);
+      exitSuccess();
     }
 
     // Get staged files
     const stagedFiles = await getStagedFiles();
 
     if (stagedFiles.length === 0) {
-      process.exit(0);
+      exitSuccess();
     }
 
     // Validate and get common path
@@ -52,11 +55,10 @@ async function main() {
       }
     }
 
-    process.exit(0);
+    exitSuccess();
   } catch (error) {
     // Don't block commit on error in this hook
-    console.error('⚠️  Warning in prepare-commit-msg:', error);
-    process.exit(0);
+    handleHookError('prepare-commit-msg', error, false);
   }
 }
 

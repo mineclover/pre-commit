@@ -2,22 +2,21 @@
 /**
  * Pre-commit hook - validates that staged files follow folder-based rules
  */
+
 import { readFileSync, writeFileSync } from 'fs';
-import { loadConfig } from '../core/config.js';
 import { CommitValidator } from '../core/validator.js';
 import { Logger } from '../core/logger.js';
 import { getStagedFiles } from '../core/git-helper.js';
 import { getMessages, formatMessage, type Language } from '../core/messages.js';
+import { initHook, handleHookError, exitSuccess, exitFailure } from './utils.js';
 import type { FolderBasedConfig } from '../presets/folder-based/types.js';
 
 async function main() {
   try {
-    const config = loadConfig();
+    const ctx = initHook();
+    if (!ctx) exitSuccess();
 
-    if (!config.enabled) {
-      process.exit(0);
-    }
-
+    const { config } = ctx;
     const messages = getMessages(config.language as Language);
     const logger = new Logger(config.logFile, config.logMaxAgeHours);
 
@@ -29,7 +28,7 @@ async function main() {
 
     if (stagedFiles.length === 0) {
       console.log(`⚠️  ${messages.noFilesStaged}`);
-      process.exit(1);
+      exitFailure();
     }
 
     // Validate
@@ -50,7 +49,7 @@ async function main() {
       console.error(`   - ${messages.actionRequired}\n`);
 
       logger.logViolation(stagedFiles, result.errors);
-      process.exit(1);
+      exitFailure();
     }
 
     // Add prefix to commit message if common path exists
@@ -68,7 +67,7 @@ async function main() {
           writeFileSync(commitMsgFile, commitMsg, 'utf-8');
           console.log(`✅ Commit prefix added: ${prefix}`);
         }
-      } catch (err) {
+      } catch {
         // COMMIT_EDITMSG not available yet (pre-commit stage)
         // This is fine, we'll handle it in prepare-commit-msg hook if needed
       }
@@ -76,10 +75,9 @@ async function main() {
 
     const displayPath = result.commonPath || 'root';
     console.log(`✅ ${messages.validationPassed}: ${stagedFiles.length} files in [${displayPath}]`);
-    process.exit(0);
+    exitSuccess();
   } catch (error) {
-    console.error('❌ Pre-commit hook error:', error);
-    process.exit(1);
+    handleHookError('pre-commit', error, true);
   }
 }
 
