@@ -201,3 +201,102 @@ export function normalizePath(filePath: string): string {
 export function isRootFile(filePath: string): boolean {
   return !filePath.includes('/');
 }
+
+/**
+ * Check if a path contains path traversal patterns
+ *
+ * Detects dangerous patterns like ".." that could be used for path traversal.
+ * This is a security measure to prevent accessing files outside the project.
+ *
+ * @param filePath - The file path to check
+ * @returns True if path traversal is detected, false otherwise
+ *
+ * @example
+ * hasPathTraversal("../etc/passwd");         // true
+ * hasPathTraversal("src/../config.ts");      // true
+ * hasPathTraversal("...");                   // false (three dots is valid)
+ * hasPathTraversal("src/components/file.ts"); // false
+ */
+export function hasPathTraversal(filePath: string): boolean {
+  const normalized = normalizePath(filePath);
+  const parts = normalized.split('/');
+  return parts.some(part => part === '..');
+}
+
+/**
+ * Sanitize a file path by removing traversal patterns
+ *
+ * Removes ".." segments and normalizes the path. Returns null if the
+ * resulting path would escape the project root (starts with ..).
+ *
+ * @param filePath - The file path to sanitize
+ * @returns Sanitized path, or null if path escapes root
+ *
+ * @example
+ * sanitizePath("src/components/file.ts");    // "src/components/file.ts"
+ * sanitizePath("src/../core/file.ts");       // "core/file.ts"
+ * sanitizePath("../etc/passwd");             // null (escapes root)
+ * sanitizePath("src/../../etc");             // null (escapes root)
+ */
+export function sanitizePath(filePath: string): string | null {
+  const normalized = normalizePath(filePath);
+  const parts = normalized.split('/').filter(p => p !== '.' && p !== '');
+  const result: string[] = [];
+
+  for (const part of parts) {
+    if (part === '..') {
+      if (result.length === 0) {
+        return null; // Would escape project root
+      }
+      result.pop();
+    } else {
+      result.push(part);
+    }
+  }
+
+  return result.join('/');
+}
+
+/**
+ * Filter out files with invalid paths (path traversal)
+ *
+ * Removes files that contain path traversal patterns from the list.
+ * Use this to sanitize file lists from external sources.
+ *
+ * @param files - Array of file paths to filter
+ * @returns Array of valid file paths only
+ *
+ * @example
+ * filterInvalidPaths(["src/file.ts", "../etc/passwd", "valid.ts"]);
+ * // Returns: ["src/file.ts", "valid.ts"]
+ */
+export function filterInvalidPaths(files: string[]): string[] {
+  return files.filter(file => !hasPathTraversal(file));
+}
+
+/**
+ * Validate and sanitize a list of file paths
+ *
+ * Returns both valid files and a list of rejected paths for reporting.
+ *
+ * @param files - Array of file paths to validate
+ * @returns Object with valid files and rejected paths
+ *
+ * @example
+ * validatePaths(["src/file.ts", "../etc/passwd"]);
+ * // Returns: { valid: ["src/file.ts"], rejected: ["../etc/passwd"] }
+ */
+export function validatePaths(files: string[]): { valid: string[]; rejected: string[] } {
+  const valid: string[] = [];
+  const rejected: string[] = [];
+
+  for (const file of files) {
+    if (hasPathTraversal(file)) {
+      rejected.push(file);
+    } else {
+      valid.push(file);
+    }
+  }
+
+  return { valid, rejected };
+}
