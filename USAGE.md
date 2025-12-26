@@ -643,3 +643,121 @@ export default {
   "preset": "precommit-preset-custom"
 }
 ```
+
+### Property Registry
+
+설정 속성의 메타데이터를 관리하고 검증하는 시스템입니다:
+
+```typescript
+import {
+  ConfigPropertyRegistry,
+  initializePropertyRegistry,
+  validateConfigWithRegistry,
+  getBuiltinSchema,
+} from 'pre-commit-folder-enforcer/core/registry';
+
+// 전역 레지스트리 초기화
+initializePropertyRegistry();
+
+// 설정 검증
+const result = validateConfigWithRegistry('folder-based', {
+  depth: 5,
+  ignorePaths: ['*.md'],
+});
+
+if (!result.valid) {
+  console.error('Validation errors:', result.errors);
+}
+
+// 기본값 적용
+const registry = new ConfigPropertyRegistry();
+const configWithDefaults = registry.applyDefaults('folder-based', { depth: 2 });
+
+// JSON Schema 생성 (IDE 자동완성용)
+const schema = registry.toJsonSchema('folder-based');
+```
+
+#### 내장 프리셋 스키마
+
+**folder-based 속성:**
+| 속성 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `depth` | number | 3 | 폴더 경로 깊이 (1-10) |
+| `ignorePaths` | string[] | [] | 무시할 경로 목록 |
+| `maxFiles` | number | 100 | 커밋당 최대 파일 수 (1-1000) |
+| `depthOverrides` | object | - | 경로별 깊이 재정의 |
+| `maxDepth` | number | 5 | auto 모드 최대 깊이 |
+
+**conventional-commits 속성:**
+| 속성 | 타입 | 기본값 | 설명 |
+|------|------|--------|------|
+| `types` | string[] | ['feat', 'fix', ...] | 허용 타입 목록 |
+| `scopes` | string[] | [] | 허용 스코프 목록 |
+| `requireScope` | boolean | false | 스코프 필수 여부 |
+| `maxHeaderLength` | number | 100 | 헤더 최대 길이 |
+
+#### 커스텀 속성 등록
+
+```typescript
+import { getGlobalPropertyRegistry } from 'pre-commit-folder-enforcer/core/registry';
+
+const registry = getGlobalPropertyRegistry();
+
+// 프리셋에 속성 추가
+registry.registerProperty('my-preset', 'customOption', {
+  name: 'customOption',
+  type: 'string',
+  description: '커스텀 옵션',
+  default: 'default-value',
+  required: false,
+});
+
+// 전체 스키마 등록
+registry.registerSchema({
+  preset: 'my-preset',
+  properties: {
+    option1: { name: 'option1', type: 'number', min: 1, max: 10 },
+    option2: { name: 'option2', type: 'boolean', default: false },
+  },
+});
+```
+
+### JS/TS 설정 파일 지원
+
+JSON 외에 JavaScript/TypeScript 설정 파일도 지원합니다:
+
+**.precommitrc.js:**
+```javascript
+export default {
+  preset: 'folder-based',
+  depth: process.env.CI ? 2 : 3,
+  ignorePaths: getIgnorePaths(),
+};
+
+function getIgnorePaths() {
+  return ['package.json', '*.md'];
+}
+```
+
+**.precommitrc.ts:**
+```typescript
+import type { FolderBasedConfig } from 'pre-commit-folder-enforcer';
+
+const config: FolderBasedConfig = {
+  preset: 'folder-based',
+  depth: 3,
+  enabled: true,
+  logFile: '.commit-logs/violations.log',
+  ignorePaths: ['package.json'],
+};
+
+export default config;
+```
+
+설정 파일 우선순위:
+1. `.precommitrc.json`
+2. `.precommitrc.js`
+3. `.precommitrc.ts`
+4. `precommit.config.json`
+5. `precommit.config.js`
+6. `package.json`의 `precommit` 필드
