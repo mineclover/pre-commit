@@ -6,7 +6,9 @@
 import type { Preset } from '../../presets/base/types.js';
 import type { BaseConfig } from '../types.js';
 import type { RegistryEntry, RegistryOptions } from './types.js';
+import type { PresetPropertySchema, PropertyValidationResult, ValidationOptions } from './property-types.js';
 import { PluginLoader } from '../plugin/loader.js';
+import { ConfigPropertyRegistry } from './property-registry.js';
 import { PresetNotFoundError } from '../errors.js';
 
 /**
@@ -30,9 +32,18 @@ export class DynamicPresetRegistry {
   private readonly entries = new Map<string, RegistryEntry>();
   private readonly loader: PluginLoader;
   private readonly loading = new Map<string, Promise<Preset>>();
+  private readonly propertyRegistry: ConfigPropertyRegistry;
 
   constructor(options: RegistryOptions = {}) {
     this.loader = new PluginLoader(options.loaderOptions);
+    this.propertyRegistry = new ConfigPropertyRegistry();
+  }
+
+  /**
+   * Get the property registry for config validation
+   */
+  getPropertyRegistry(): ConfigPropertyRegistry {
+    return this.propertyRegistry;
   }
 
   /**
@@ -40,11 +51,13 @@ export class DynamicPresetRegistry {
    * @param name - Unique preset identifier
    * @param preset - Preset instance
    * @param source - Source of the preset
+   * @param propertySchema - Optional property schema for config validation
    */
   register<TConfig extends BaseConfig>(
     name: string,
     preset: Preset<TConfig>,
-    source: RegistryEntry['source'] = 'dynamic'
+    source: RegistryEntry['source'] = 'dynamic',
+    propertySchema?: PresetPropertySchema
   ): void {
     const entry: RegistryEntry<TConfig> = {
       preset,
@@ -53,9 +66,62 @@ export class DynamicPresetRegistry {
     };
     this.entries.set(name, entry as RegistryEntry);
 
+    // Register property schema if provided
+    if (propertySchema) {
+      this.propertyRegistry.registerSchema(propertySchema);
+    } else if (preset.configSchema) {
+      // Try to extract from preset's configSchema
+      this.registerSchemaFromPreset(name, preset);
+    }
+
     // Call lifecycle hook
     if (preset.onRegister) {
       preset.onRegister();
+    }
+  }
+
+  /**
+   * Register property schema for a preset
+   */
+  registerPropertySchema(schema: PresetPropertySchema): void {
+    this.propertyRegistry.registerSchema(schema);
+  }
+
+  /**
+   * Validate configuration for a preset
+   */
+  validateConfig(
+    preset: string,
+    config: Record<string, unknown>,
+    options?: ValidationOptions
+  ): PropertyValidationResult {
+    return this.propertyRegistry.validate(preset, config, options);
+  }
+
+  /**
+   * Apply defaults to configuration
+   */
+  applyConfigDefaults(
+    preset: string,
+    config: Record<string, unknown>
+  ): Record<string, unknown> {
+    return this.propertyRegistry.applyDefaults(preset, config);
+  }
+
+  /**
+   * Extract and register schema from preset's configSchema
+   */
+  private registerSchemaFromPreset(name: string, preset: Preset): void {
+    if (!preset.configSchema) return;
+
+    // Basic JSON Schema to PropertySchema conversion
+    const jsonSchema = preset.configSchema as Record<string, unknown>;
+    if (jsonSchema.properties && typeof jsonSchema.properties === 'object') {
+      this.propertyRegistry.registerSchema({
+        preset: name,
+        properties: {},
+        additionalProperties: true,
+      });
     }
   }
 
