@@ -23,3 +23,15 @@ export * from './utils/index.js';
 
 // Error classes
 export * from './errors.js';
+
+// Plugin system
+export * from './plugin/index.js';
+
+// Dynamic registry
+export * from './registry/index.js';
+
+// Validation pipeline
+export * from './pipeline/index.js';
+
+// Extended config
+export * from './config/index.js';
