@@ -1,7 +1,7 @@
 # Pre-commit Folder Enforcer
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue.svg)](https://www.typescriptlang.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue.svg)](https://www.typescriptlang.org/)
 [![Convention Compliance](https://img.shields.io/badge/Convention%20Compliance-100%25-brightgreen.svg)](./CONVENTION_CHECKLIST.md)
 
 TypeScript 기반의 확장 가능한 Git pre-commit 훅 시스템으로, 폴더 단위 커밋 규칙을 강제하고 일관된 커밋 메시지 형식을 유지합니다.
@@ -304,18 +304,27 @@ git commit -m "Update files"
 │   │   ├── validator.ts         # 검증 로직
 │   │   ├── logger.ts            # 로깅 시스템
 │   │   ├── messages.ts          # 다국어 메시지
-│   │   ├── constants.ts         # 상수 정의
 │   │   ├── errors.ts            # 커스텀 에러 클래스
-│   │   ├── types.ts             # 타입 정의
 │   │   ├── git-helper.ts        # Git 유틸리티
+│   │   ├── plugin/              # 플러그인 시스템
+│   │   │   ├── loader.ts        # 플러그인 로더
+│   │   │   ├── resolver.ts      # 경로 해석
+│   │   │   └── validator.ts     # 인터페이스 검증
+│   │   ├── registry/            # 동적 레지스트리
+│   │   │   ├── registry.ts      # 프리셋 레지스트리
+│   │   │   └── discovery.ts     # 자동 탐색
+│   │   ├── pipeline/            # 검증 파이프라인
+│   │   │   ├── pipeline.ts      # 파이프라인 오케스트레이터
+│   │   │   └── executor.ts      # 실행 전략
+│   │   ├── config/              # 확장 설정
+│   │   │   ├── loader.ts        # 고급 설정 로더
+│   │   │   └── environment.ts   # 환경 변수 보간
 │   │   └── utils/               # 유틸리티 함수
-│   │       ├── path-utils.ts    # 경로 조작
+│   │       ├── path-utils.ts    # 경로 조작 + 보안 검증
 │   │       ├── validation-utils.ts # 검증 로직
 │   │       └── console.ts       # 콘솔 출력 유틸리티
 │   ├── presets/                 # 검증 프리셋
 │   │   ├── base/                # 베이스 인터페이스
-│   │   │   ├── types.ts         # Preset 인터페이스
-│   │   │   └── registry.ts      # Preset 레지스트리
 │   │   ├── folder-based/        # 폴더 기반 프리셋
 │   │   └── conventional-commits/ # Conventional Commits 프리셋
 │   ├── hooks/                   # Git hooks
@@ -325,20 +334,12 @@ git commit -m "Update files"
 │   │   └── post-commit.ts       # 로그 정리
 │   └── cli/                     # CLI 도구
 │       ├── index.ts             # CLI 진입점
-│       └── commands/            # CLI 명령어
-│           ├── index.ts         # 명령어 export
-│           ├── check.ts         # check 명령어
-│           ├── status.ts        # status 명령어
-│           ├── config.ts        # config 명령어
-│           ├── init.ts          # init 명령어
-│           ├── validate-config.ts # validate-config 명령어
-│           ├── cleanup.ts       # cleanup 명령어
-│           ├── logs.ts          # logs 명령어
-│           ├── stats.ts         # stats 명령어
-│           └── install.ts       # install 명령어
+│       └── commands/            # CLI 명령어 (11개)
+├── tests/
+│   ├── unit/                    # 단위 테스트 (247개)
+│   └── integration/             # 통합 테스트 (14개)
 ├── .husky/                      # Husky hooks
 ├── dist/                        # 컴파일된 JS
-├── docs/                        # 문서
 └── .precommitrc.json            # 설정 파일
 ```
 
@@ -346,10 +347,12 @@ git commit -m "Update files"
 
 이 프로젝트는 **Preset 패턴**을 사용하여 확장 가능한 검증 시스템을 제공합니다:
 
-1. **Core**: 공통 인프라 (설정, 로깅, 검증)
+1. **Core**: 공통 인프라 (설정, 로깅, 검증, 보안)
 2. **Presets**: 플러그 가능한 검증 규칙
-3. **Hooks**: Git 라이프사이클 통합
-4. **CLI**: 사용자 인터페이스
+3. **Plugin System**: 외부 프리셋 동적 로딩
+4. **Pipeline**: 다중 프리셋 순차/병렬 실행
+5. **Hooks**: Git 라이프사이클 통합
+6. **CLI**: 사용자 인터페이스 (11개 명령어)
 
 ### 빌드 및 테스트
 ```bash
@@ -359,9 +362,14 @@ npm run build
 # 클린 빌드
 npm run rebuild
 
-# 훅 테스트 (실제 커밋으로 테스트)
-git add <files>
-git commit -m "Test message"
+# 테스트 실행 (261개)
+npm test
+
+# 테스트 커버리지
+npm run test:coverage
+
+# Dry-run 검증
+npm run precommit check -- --files "src/core/a.ts,src/core/b.ts"
 ```
 
 ### 새로운 Preset 추가하기
