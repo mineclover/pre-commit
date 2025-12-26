@@ -6,6 +6,7 @@ import { simpleGit } from 'simple-git';
 import { loadConfig } from '../../core/config.js';
 import { CommitValidator } from '../../core/validator.js';
 import { matchAnyGlob } from '../../core/utils/glob.js';
+import { validatePaths } from '../../core/utils/path-utils.js';
 import {
   printHeader,
   printFooter,
@@ -40,16 +41,25 @@ export async function checkCommand(args: string[] = []): Promise<void> {
     const customFiles = parseFilesArg(args);
     const isDryRun = customFiles !== null;
 
-    let stagedFiles: string[];
+    let rawFiles: string[];
     if (isDryRun) {
-      stagedFiles = customFiles;
+      rawFiles = customFiles;
     } else {
       const status = await git.status();
-      stagedFiles = Array.from(new Set([
+      rawFiles = Array.from(new Set([
         ...status.staged,
         ...status.created,
         ...status.renamed.map(r => r.to)
       ]));
+    }
+
+    // Validate paths for security (filter out path traversal patterns)
+    const { valid: stagedFiles, rejected: invalidPaths } = validatePaths(rawFiles);
+
+    if (invalidPaths.length > 0) {
+      printWarning(`Rejected ${invalidPaths.length} file(s) with invalid paths:`);
+      invalidPaths.forEach(f => printListItem(f, 3));
+      console.log('');
     }
 
     if (stagedFiles.length === 0) {
