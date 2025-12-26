@@ -5,6 +5,7 @@
 
 import { readFileSync, existsSync } from 'fs';
 import { join, dirname, resolve, isAbsolute } from 'path';
+import { pathToFileURL } from 'url';
 import type {
   ExtendedConfig,
   ResolvedConfig,
@@ -67,7 +68,7 @@ export class ConfigLoader {
     }
 
     // Load raw config
-    const rawConfig = this.loadFile(configInfo);
+    const rawConfig = await this.loadFile(configInfo);
 
     // Resolve with inheritance, env, and conditionals
     const resolved = await this.resolve(rawConfig, dirname(configInfo.path));
@@ -130,7 +131,7 @@ export class ConfigLoader {
   /**
    * Load config file
    */
-  private loadFile(info: ConfigFileInfo): ExtendedConfig {
+  private async loadFile(info: ConfigFileInfo): Promise<ExtendedConfig> {
     // Check cache
     if (this.cache.has(info.path)) {
       return this.cache.get(info.path)!;
@@ -142,13 +143,42 @@ export class ConfigLoader {
       const content = readFileSync(info.path, 'utf-8');
       const parsed = JSON.parse(content);
       config = info.isPackageJson ? parsed.precommit : parsed;
+    } else if (info.format === 'js' || info.format === 'ts') {
+      config = await this.loadJsConfig(info.path);
     } else {
-      // JS/TS config not implemented yet
       throw new ConfigValidationError(`Config format not supported: ${info.format}`);
     }
 
     this.cache.set(info.path, config);
     return config;
+  }
+
+  /**
+   * Load JS/TS config file using dynamic import
+   */
+  private async loadJsConfig(filePath: string): Promise<ExtendedConfig> {
+    try {
+      const fileUrl = pathToFileURL(filePath).href;
+      const module = await import(fileUrl);
+
+      // Support various export patterns
+      const config = module.default || module.config || module;
+
+      if (!config || typeof config !== 'object') {
+        throw new ConfigValidationError(
+          `Invalid config export in ${filePath}: expected object`
+        );
+      }
+
+      return config as ExtendedConfig;
+    } catch (error) {
+      if (error instanceof ConfigValidationError) {
+        throw error;
+      }
+      throw new ConfigValidationError(
+        `Failed to load config from ${filePath}: ${error instanceof Error ? error.message : String(error)}`
+      );
+    }
   }
 
   /**
@@ -232,12 +262,12 @@ export class ConfigLoader {
     // Relative path
     if (extend.startsWith('./') || extend.startsWith('../')) {
       const filePath = resolve(basePath, extend);
-      return this.loadFile(this.getConfigInfo(filePath));
+      return await this.loadFile(this.getConfigInfo(filePath));
     }
 
     // Absolute path
     if (isAbsolute(extend)) {
-      return this.loadFile(this.getConfigInfo(extend));
+      return await this.loadFile(this.getConfigInfo(extend));
     }
 
     // npm package
@@ -257,7 +287,7 @@ export class ConfigLoader {
       for (const fileName of CONFIG_FILES) {
         const configPath = join(packageDir, fileName);
         if (existsSync(configPath)) {
-          return this.loadFile(this.getConfigInfo(configPath));
+          return await this.loadFile(this.getConfigInfo(configPath));
         }
       }
 
