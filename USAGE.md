@@ -463,3 +463,183 @@ cat .commit-logs/violations.log
   ]
 }
 ```
+
+## v2.0 고급 기능
+
+### 설정 상속 (extends)
+
+여러 설정 파일을 상속하여 사용할 수 있습니다:
+
+```json
+{
+  "extends": "preset:recommended",
+  "depth": 2
+}
+```
+
+#### 사용 가능한 내장 프리셋:
+- `preset:recommended` - 권장 설정 (depth: 3, maxFiles: 50)
+- `preset:strict` - 엄격한 설정 (depth: 2, maxFiles: 20)
+- `preset:relaxed` - 관대한 설정 (depth: 5, maxFiles: 100)
+
+#### 여러 설정 상속:
+```json
+{
+  "extends": ["preset:recommended", "./team-config.json"],
+  "maxFiles": 30
+}
+```
+
+### 환경 변수 지원
+
+설정 값에 환경 변수를 사용할 수 있습니다:
+
+```json
+{
+  "preset": "folder-based",
+  "depth": "${COMMIT_DEPTH:-3}",
+  "logFile": "${LOG_DIR:-.commit-logs}/violations.log",
+  "$env": {
+    "COMMIT_DEPTH": "2"
+  }
+}
+```
+
+#### 지원 문법:
+- `${VAR}` - 환경 변수 값
+- `${VAR:-default}` - 기본값 포함
+- `$env` - 기본 환경 변수 정의
+
+### 조건부 설정 (conditionals)
+
+브랜치, 환경 변수, 파일 패턴에 따라 다른 설정을 적용할 수 있습니다:
+
+```json
+{
+  "preset": "folder-based",
+  "depth": 3,
+  "conditionals": [
+    {
+      "when": { "branch": "main" },
+      "config": { "depth": 2, "maxFiles": 20 }
+    },
+    {
+      "when": { "branch": "feature/*" },
+      "config": { "maxFiles": 50 }
+    },
+    {
+      "when": { "files": ["*.test.ts", "*.spec.ts"] },
+      "config": { "enabled": false }
+    },
+    {
+      "when": { "env": { "CI": "true" } },
+      "config": { "verbose": true }
+    }
+  ]
+}
+```
+
+### Validation Pipeline
+
+여러 preset을 순차적 또는 병렬로 실행할 수 있습니다:
+
+```json
+{
+  "preset": "folder-based",
+  "pipeline": {
+    "strategy": "sequential",
+    "stages": [
+      { "preset": "folder-based" },
+      { "preset": "conventional-commits", "continueOnError": true }
+    ]
+  }
+}
+```
+
+#### 실행 전략:
+- `sequential` - 순차 실행 (기본)
+- `parallel` - 병렬 실행
+- `first-pass` - 첫 번째 성공까지 실행
+- `first-fail` - 첫 번째 실패까지 실행
+
+#### 조건부 스테이지:
+```json
+{
+  "pipeline": {
+    "strategy": "sequential",
+    "stages": [
+      {
+        "preset": "folder-based",
+        "when": {
+          "files": ["src/**/*.ts"],
+          "branches": ["main", "develop"]
+        }
+      }
+    ]
+  }
+}
+```
+
+### Plugin 시스템
+
+외부 preset을 로드하고 관리할 수 있습니다:
+
+```bash
+# 등록된 preset 목록 확인
+npm run precommit plugin list
+
+# 설치된 plugin 검색
+npm run precommit plugin discover
+
+# plugin 정보 확인
+npm run precommit plugin info folder-based
+
+# 외부 plugin 로드
+npm run precommit plugin load ./my-preset
+npm run precommit plugin load precommit-preset-eslint
+```
+
+#### 외부 Preset 생성:
+
+1. npm 패키지 생성:
+```json
+{
+  "name": "precommit-preset-custom",
+  "precommit": {
+    "preset": "dist/preset.js"
+  }
+}
+```
+
+2. Preset 구현:
+```typescript
+export default {
+  name: 'custom-preset',
+  description: 'My custom preset',
+
+  validateFiles(stagedFiles, config) {
+    return { valid: true, files: stagedFiles, errors: [] };
+  },
+
+  validateCommitMessage(message, config) {
+    return { valid: true, errors: [] };
+  },
+
+  getCommitPrefix(result, config) {
+    return '[custom]';
+  },
+
+  // 선택적 라이프사이클 훅
+  onRegister() { console.log('Preset registered'); },
+  onBeforeValidate(context) { /* ... */ },
+  onAfterValidate(result) { /* ... */ },
+  onUnload() { /* cleanup */ }
+};
+```
+
+3. 설정에서 사용:
+```json
+{
+  "preset": "precommit-preset-custom"
+}
+```
